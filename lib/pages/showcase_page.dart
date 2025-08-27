@@ -1,12 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'login/login_page.dart';
-import 'login/mobile_login_page.dart';
-import 'login/forgot_password_page.dart';
+import 'login/index.dart'; // 使用统一导出
 
 /// Debug: 调试选项页面
-class ShowcasePage extends StatelessWidget {
+class ShowcasePage extends StatefulWidget {
   const ShowcasePage({super.key});
+
+  @override
+  State<ShowcasePage> createState() => _ShowcasePageState();
+}
+
+class _ShowcasePageState extends State<ShowcasePage> {
+  bool _showLoginOptions = false;
 
   @override
   Widget build(BuildContext context) {
@@ -66,27 +71,59 @@ class ShowcasePage extends StatelessWidget {
             Expanded(
               child: ListView(
                 children: [
-                  _buildDebugOption(
+                  // 登录模块开关
+                  _buildToggleOption(
                     context,
-                    '[1] MOBILE PASSWORD LOGIN',
-                    'Test mobile phone + password login',
-                    Icons.login,
-                    () => _navigateToLogin(context),
+                    '[1] LOGIN MODULE',
+                    'Authentication & User Management',
+                    Icons.account_circle,
+                    _showLoginOptions,
+                    (value) {
+                      setState(() {
+                        _showLoginOptions = value;
+                      });
+                    },
                   ),
-                  _buildDebugOption(
-                    context,
-                    '[1.1] MOBILE SMS LOGIN',
-                    'Test mobile phone SMS verification',
-                    Icons.phone_android,
-                    () => _navigateToMobileLogin(context),
-                  ),
-                  _buildDebugOption(
-                    context,
-                    '[1.2] FORGOT PASSWORD',
-                    'Test forgot password flow',
-                    Icons.lock_reset,
-                    () => _navigateToForgotPassword(context),
-                  ),
+                  
+                  // 登录模块子选项
+                  if (_showLoginOptions) ...[
+                    _buildSubOption(
+                      context,
+                      '[1.1] PASSWORD LOGIN',
+                      'Mobile phone + password login',
+                      Icons.login,
+                      () => _navigateToLogin(context),
+                    ),
+                    _buildSubOption(
+                      context,
+                      '[1.2] SMS LOGIN',
+                      'Mobile phone SMS verification',
+                      Icons.phone_android,
+                      () => _navigateToMobileLogin(context),
+                    ),
+                    _buildSubOption(
+                      context,
+                      '[1.3] FORGOT PASSWORD',
+                      'Password recovery flow',
+                      Icons.lock_reset,
+                      () => _navigateToForgotPassword(context),
+                    ),
+                    _buildSubOption(
+                      context,
+                      '[1.4] VERIFY CODE',
+                      'SMS verification code page',
+                      Icons.security,
+                      () => _navigateToVerifyCode(context),
+                    ),
+                    _buildSubOption(
+                      context,
+                      '[1.5] RESET PASSWORD',
+                      'Password reset page',
+                      Icons.key,
+                      () => _navigateToResetPassword(context),
+                    ),
+                  ],
+                  
                   _buildDebugOption(
                     context,
                     '[2] UI COMPONENTS TEST',
@@ -159,6 +196,98 @@ class ShowcasePage extends StatelessWidget {
     );
   }
 
+  Widget _buildToggleOption(
+    BuildContext context,
+    String title,
+    String description,
+    IconData icon,
+    bool isExpanded,
+    ValueChanged<bool> onChanged,
+  ) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      child: ListTile(
+        leading: Icon(
+          icon,
+          color: Colors.green,
+          size: 20,
+        ),
+        title: Text(
+          title,
+          style: const TextStyle(
+            color: Colors.green,
+            fontFamily: 'monospace',
+            fontSize: 14,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        subtitle: Text(
+          description,
+          style: TextStyle(
+            color: Colors.grey[400],
+            fontFamily: 'monospace',
+            fontSize: 11,
+          ),
+        ),
+        trailing: Icon(
+          isExpanded ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down,
+          color: Colors.green,
+          size: 20,
+        ),
+        onTap: () => onChanged(!isExpanded), // 点击整个ListTile触发开关
+        tileColor: Colors.grey[900],
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(4),
+          side: BorderSide(color: Colors.green.withOpacity(0.3)),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSubOption(
+    BuildContext context,
+    String title,
+    String description,
+    IconData icon,
+    VoidCallback onTap,
+  ) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 4, left: 16),
+      child: ListTile(
+        leading: Icon(
+          icon,
+          color: Colors.green.withOpacity(0.8),
+          size: 18,
+        ),
+        title: Text(
+          title,
+          style: TextStyle(
+            color: Colors.green.withOpacity(0.8),
+            fontFamily: 'monospace',
+            fontSize: 13,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+        subtitle: Text(
+          description,
+          style: TextStyle(
+            color: Colors.grey[500],
+            fontFamily: 'monospace',
+            fontSize: 10,
+          ),
+        ),
+        onTap: onTap,
+        tileColor: Colors.grey[850],
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(4),
+          side: BorderSide(color: Colors.green.withOpacity(0.2)),
+        ),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+        minLeadingWidth: 20,
+      ),
+    );
+  }
+
   Widget _buildDebugOption(
     BuildContext context,
     String title,
@@ -219,6 +348,31 @@ class ShowcasePage extends StatelessWidget {
     Navigator.push(
       context,
       MaterialPageRoute(builder: (context) => const ForgotPasswordPage()),
+    );
+  }
+
+  void _navigateToVerifyCode(BuildContext context) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const VerifyCodePage(
+          phoneNumber: '13800138000',
+          countryCode: '+86',
+          purpose: 'reset_password',
+        ),
+      ),
+    );
+  }
+
+  void _navigateToResetPassword(BuildContext context) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const ResetPasswordPage(
+          phoneNumber: '13800138000',
+          countryCode: '+86',
+        ),
+      ),
     );
   }
 

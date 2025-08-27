@@ -75,7 +75,6 @@ class MessageSnackBar {
         icon = Icons.warning;
         break;
       case MessageType.info:
-      default:
         backgroundColor = Colors.blue;
         icon = Icons.info;
         break;

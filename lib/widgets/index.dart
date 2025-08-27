@@ -20,6 +20,9 @@ export 'button_widgets.dart';
 // 布局组件
 export 'layout_widgets.dart';
 
+// 验证码输入组件
+export 'code_input_widget.dart';
+
 /// 📚 组件库说明
 /// 
 /// ## 🎨 通用组件 (common_widgets.dart)

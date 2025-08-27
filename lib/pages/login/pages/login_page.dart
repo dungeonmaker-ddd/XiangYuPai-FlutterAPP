@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'login_widgets.dart';
-import '../../models/country_model.dart';
+import '../widgets/phone_input_widget.dart';
+import '../widgets/password_input_widget.dart';
+import '../utils/login_routes.dart';
+import '../models/country_model.dart';
 
 /// 🔐 密码登录页面
 /// 提供手机号+密码登录功能
@@ -13,32 +14,19 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
-  final _formKey = GlobalKey<FormState>();
   final _phoneController = TextEditingController();
   final _passwordController = TextEditingController();
   
   bool _isLoading = false;
-  CountryModel? _selectedCountry;
+  CountryModel? _selectedCountry = CountryData.findByCode('+86'); // 默认中国大陆
   
-  // 获取当前区号对应的手机号长度
-  int get _requiredPhoneLength {
-    if (_selectedCountry == null) return 11;
-    return CountryData.getPhoneLengthByCode(_selectedCountry!.code);
-  }
-
-  // 获取当前选中的国家，默认为中国大陆
-  CountryModel get _currentCountry {
-    return _selectedCountry ?? CountryData.findByCode('+86')!;
-  }
+  // 验证逻辑已移到PhoneInputWidget中，这些辅助方法可以移除
 
   bool get _isFormValid {
-    final phone = _phoneController.text.trim();
-    final password = _passwordController.text;
-    
-    return phone.length == _requiredPhoneLength && 
-           phone.isNotEmpty && 
-           RegExp(r'^[0-9]+$').hasMatch(phone) &&
-           password.length >= 6;
+    return PhoneInputWidget.isPhoneValid(
+      phone: _phoneController.text,
+      selectedCountry: _selectedCountry,
+    ) && _passwordController.text.length >= 6;
   }
 
   @override
@@ -179,7 +167,7 @@ class _LoginPageState extends State<LoginPage> {
   Widget _buildLoginForm() {
     return Column(
       children: [
-        // 手机号输入组件
+        // 手机号输入组件 - 使用升级版本
         PhoneInputWidget(
           controller: _phoneController,
           selectedCountry: _selectedCountry,
@@ -190,6 +178,9 @@ class _LoginPageState extends State<LoginPage> {
               _phoneController.clear();
             });
           },
+          onChanged: () => setState(() {}), // 内置状态监听
+          enableValidation: true,
+          showValidationHint: false, // 登录页面不显示验证提示
         ),
         
         const SizedBox(height: 20),
@@ -245,13 +236,7 @@ class _LoginPageState extends State<LoginPage> {
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         TextButton(
-          onPressed: () {
-            // 这里可以导航到验证码登录页面
-            // Navigator.push(context, MaterialPageRoute(builder: (context) => SmsLoginPage()));
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('验证码登录功能开发中...')),
-            );
-          },
+          onPressed: () => LoginRoutes.toMobileLogin(context),
           child: const Text(
             '验证码登录',
             style: TextStyle(
@@ -261,13 +246,7 @@ class _LoginPageState extends State<LoginPage> {
           ),
         ),
         TextButton(
-          onPressed: () {
-            // 这里可以导航到忘记密码页面
-            // Navigator.push(context, MaterialPageRoute(builder: (context) => ForgotPasswordPage()));
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('忘记密码功能开发中...')),
-            );
-          },
+          onPressed: () => LoginRoutes.toForgotPassword(context),
           child: const Text(
             '忘记密码?',
             style: TextStyle(
@@ -294,11 +273,7 @@ class _LoginPageState extends State<LoginPage> {
             ),
           ),
           GestureDetector(
-            onTap: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('探店用户协议')),
-              );
-            },
+            onTap: () => LoginRoutes.toUserAgreement(context),
             child: const Text(
               '《探店用户协议》',
               style: TextStyle(
@@ -315,11 +290,7 @@ class _LoginPageState extends State<LoginPage> {
             ),
           ),
           GestureDetector(
-            onTap: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('隐私政策')),
-              );
-            },
+            onTap: () => LoginRoutes.toPrivacyPolicy(context),
             child: const Text(
               '《隐私政策》',
               style: TextStyle(

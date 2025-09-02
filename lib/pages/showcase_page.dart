@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'login/index.dart'; // 使用统一导出
+import 'home/index.dart'; // 导入首页模块
 
 /// Debug: 调试选项页面
 class ShowcasePage extends StatefulWidget {
@@ -12,6 +13,7 @@ class ShowcasePage extends StatefulWidget {
 
 class _ShowcasePageState extends State<ShowcasePage> {
   bool _showLoginOptions = false;
+  bool _showHomeOptions = false;
 
   @override
   Widget build(BuildContext context) {
@@ -124,58 +126,111 @@ class _ShowcasePageState extends State<ShowcasePage> {
                     ),
                   ],
                   
+                  // 首页模块开关
+                  _buildToggleOption(
+                    context,
+                    '[2] HOME MODULE',
+                    'Homepage & User Discovery',
+                    Icons.home,
+                    _showHomeOptions,
+                    (value) {
+                      setState(() {
+                        _showHomeOptions = value;
+                      });
+                    },
+                  ),
+                  
+                  // 首页模块子选项
+                  if (_showHomeOptions) ...[
+                    _buildSubOption(
+                      context,
+                      '[2.1] HOME PAGE',
+                      'Main homepage with recommendations',
+                      Icons.dashboard,
+                      () => _navigateToHomePage(context),
+                    ),
+                    _buildSubOption(
+                      context,
+                      '[2.2] SEARCH BAR',
+                      'Search functionality test',
+                      Icons.search,
+                      () => _showMessage(context, 'Search Bar test - Available in HomePage'),
+                    ),
+                    _buildSubOption(
+                      context,
+                      '[2.3] CATEGORY GRID',
+                      'Category selection grid',
+                      Icons.grid_view,
+                      () => _showMessage(context, 'Category Grid test - Available in HomePage'),
+                    ),
+                    _buildSubOption(
+                      context,
+                      '[2.4] USER CARDS',
+                      'User recommendation cards',
+                      Icons.people,
+                      () => _showMessage(context, 'User Cards test - Available in HomePage'),
+                    ),
+                    _buildSubOption(
+                      context,
+                      '[2.5] LOCATION PICKER',
+                      'City location selection page',
+                      Icons.location_on,
+                      () => _navigateToLocationPicker(context),
+                    ),
+                  ],
+                  
                   _buildDebugOption(
                     context,
-                    '[2] UI COMPONENTS TEST',
+                    '[3] UI COMPONENTS TEST',
                     'Test various UI components',
                     Icons.widgets,
                     () => _showMessage(context, 'UI Components test - Not implemented'),
                   ),
                   _buildDebugOption(
                     context,
-                    '[3] NETWORK DEBUG',
+                    '[4] NETWORK DEBUG',
                     'Test network requests and responses',
                     Icons.network_check,
                     () => _showMessage(context, 'Network debug - Not implemented'),
                   ),
                   _buildDebugOption(
                     context,
-                    '[4] DATABASE TEST',
+                    '[5] DATABASE TEST',
                     'Test local database operations',
                     Icons.storage,
                     () => _showMessage(context, 'Database test - Not implemented'),
                   ),
                   _buildDebugOption(
                     context,
-                    '[5] PERFORMANCE MONITOR',
+                    '[6] PERFORMANCE MONITOR',
                     'Monitor app performance metrics',
                     Icons.speed,
                     () => _showMessage(context, 'Performance monitor - Not implemented'),
                   ),
                   _buildDebugOption(
                     context,
-                    '[6] CACHE MANAGER',
+                    '[7] CACHE MANAGER',
                     'Manage application cache',
                     Icons.cached,
                     () => _showMessage(context, 'Cache manager - Not implemented'),
                   ),
                   _buildDebugOption(
                     context,
-                    '[7] LOG VIEWER',
+                    '[8] LOG VIEWER',
                     'View application logs',
                     Icons.description,
                     () => _showMessage(context, 'Log viewer - Not implemented'),
                   ),
                   _buildDebugOption(
                     context,
-                    '[8] DEVICE INFO',
+                    '[9] DEVICE INFO',
                     'Display device information',
                     Icons.phone_android,
                     () => _showDeviceInfo(context),
                   ),
                   _buildDebugOption(
                     context,
-                    '[9] THEME SWITCHER',
+                    '[10] THEME SWITCHER',
                     'Switch between themes',
                     Icons.palette,
                     () => _showMessage(context, 'Theme switcher - Not implemented'),
@@ -374,6 +429,20 @@ class _ShowcasePageState extends State<ShowcasePage> {
         ),
       ),
     );
+  }
+
+  void _navigateToHomePage(BuildContext context) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const HomePage()),
+    );
+  }
+
+  void _navigateToLocationPicker(BuildContext context) async {
+    final result = await HomeRoutes.toLocationPickerPage(context);
+    if (result != null && mounted) {
+      _showMessage(context, '选择了城市: ${result.name}');
+    }
   }
 
   void _showMessage(BuildContext context, String message) {

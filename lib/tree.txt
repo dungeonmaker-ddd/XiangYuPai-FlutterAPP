@@ -1,0 +1,97 @@
+卷 系统 的文件夹 PATH 列表
+卷序列号为 FE46-EF7B
+C:.
+│  main.dart
+│  tree.txt
+│  
+├─.cursor
+│  └─rules
+│          changeableFormatStatbleRules.mdc
+│          clienttype.mdc
+│          
+├─pages
+│  │  showcase_page.dart
+│  │  
+│  ├─home
+│  │  │  index.dart
+│  │  │  
+│  │  ├─config
+│  │  │      home_config.dart
+│  │  │      
+│  │  ├─models
+│  │  │      category_model.dart
+│  │  │      location_model.dart
+│  │  │      store_model.dart
+│  │  │      user_model.dart
+│  │  │      
+│  │  ├─pages
+│  │  │      home_page.dart
+│  │  │      location_picker_page.dart
+│  │  │      
+│  │  ├─services
+│  │  │      home_service.dart
+│  │  │      
+│  │  ├─svg
+│  │  │      K歌.svg
+│  │  │      台球.svg
+│  │  │      和平精英.svg
+│  │  │      喝酒.svg
+│  │  │      按摩.svg
+│  │  │      探店.svg
+│  │  │      王者荣耀.svg
+│  │  │      私影.svg
+│  │  │      英雄联盟.svg
+│  │  │      荒野乱斗.svg
+│  │  │      
+│  │  ├─utils
+│  │  │      home_routes.dart
+│  │  │      
+│  │  └─widgets
+│  │          category_grid_widget.dart
+│  │          recommendation_card_widget.dart
+│  │          search_bar_widget.dart
+│  │          svg_icon_widget.dart
+│  │          user_profile_card.dart
+│  │          
+│  └─login
+│      │  index.dart
+│      │  README.md
+│      │  
+│      ├─config
+│      │      auth_config.dart
+│      │      
+│      ├─debug
+│      │      api_test_page.dart
+│      │      
+│      ├─models
+│      │      auth_models.dart
+│      │      country_model.dart
+│      │      
+│      ├─pages
+│      │      forgot_password_page.dart
+│      │      login_page.dart
+│      │      mobile_login_page.dart
+│      │      reset_password_page.dart
+│      │      verify_code_page.dart
+│      │      
+│      ├─services
+│      │      auth_service.dart
+│      │      
+│      ├─utils
+│      │      login_routes.dart
+│      │      
+│      └─widgets
+│              code_input_widget.dart
+│              country_bottom_sheet.dart
+│              country_selector.dart
+│              index.dart
+│              password_input_widget.dart
+│              phone_input_widget.dart
+│              
+└─widgets
+        button_widgets.dart
+        common_widgets.dart
+        form_widgets.dart
+        index.dart
+        layout_widgets.dart
+        

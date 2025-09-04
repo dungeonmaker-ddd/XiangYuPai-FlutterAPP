@@ -1,44 +1,35 @@
 /// 🔐 登录模块统一导出文件
 /// 
-/// 这个文件提供了登录模块所有组件的统一入口，方便外部模块引用
+/// 现在主要使用 unified_login_page.dart (8段式单文件架构)
+/// 保留必要的组件和配置供统一登录页面使用
 /// 
 /// 使用示例:
 /// ```dart
-/// import 'package:your_app/pages/login/index.dart';
+/// import 'package:your_app/pages/login/unified_login_page.dart';
 /// 
-/// // 直接使用登录页面
-/// Navigator.push(context, MaterialPageRoute(builder: (context) => LoginPage()));
-/// 
-/// // 或使用路由管理
-/// LoginRoutes.toPasswordLogin(context);
+/// // 使用新的统一登录页面
+/// Navigator.push(context, MaterialPageRoute(builder: (context) => UnifiedLoginPage()));
 /// ```
 
-// 📱 页面导出
-export 'pages/login_page.dart';
-export 'pages/mobile_login_page.dart';
-export 'pages/forgot_password_page.dart';
-export 'pages/verify_code_page.dart';
-export 'pages/reset_password_page.dart';
+// 🆕 新版统一登录页面
+export 'unified_login_page.dart';
 
-// 🧩 组件导出
-export 'widgets/phone_input_widget.dart';
-export 'widgets/password_input_widget.dart';
-export 'widgets/code_input_widget.dart';
+// 🧩 保留的组件 (供统一登录页面使用)
 export 'widgets/country_selector.dart';
 export 'widgets/country_bottom_sheet.dart';
 
-// 🧭 工具导出
-export 'utils/login_routes.dart';
-
-// 📊 模型导出
+// 📊 数据模型 (供统一登录页面使用)
 export 'models/country_model.dart';
 export 'models/auth_models.dart';
 
-// 🔧 服务导出
+// 🔧 服务层 (供统一登录页面使用)
 export 'services/auth_service.dart';
 
-// ⚙️ 配置导出
+// 🆕 新版API管理器 (推荐使用)
+export 'login_api.dart';
+
+// ⚙️ 配置 (供统一登录页面使用)
 export 'config/auth_config.dart';
 
-// 🧪 调试工具导出 (仅在开发环境)
+// 🧪 调试工具 (仅在开发环境)
 export 'debug/api_test_page.dart';

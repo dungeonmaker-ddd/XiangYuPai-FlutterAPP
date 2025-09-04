@@ -20,8 +20,8 @@ export 'button_widgets.dart';
 // 布局组件
 export 'layout_widgets.dart';
 
-// 验证码输入组件
-export 'code_input_widget.dart';
+// 验证码输入组件 - 已移动到login模块中
+// export 'code_input_widget.dart';
 
 /// 📚 组件库说明
 /// 

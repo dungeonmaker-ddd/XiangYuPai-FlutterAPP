@@ -185,6 +185,7 @@ class HomeState {
   final bool hasMoreData;
   final String selectedTab; // 当前选中的筛选标签
   final DateTime? promoEndTime; // 限时专享结束时间
+  final Map<String, dynamic>? filterCriteria; // 筛选条件（简化版）
 
   const HomeState({
     this.isLoading = false,
@@ -198,6 +199,7 @@ class HomeState {
     this.hasMoreData = true,
     this.selectedTab = '附近',
     this.promoEndTime,
+    this.filterCriteria,
   });
 
   HomeState copyWith({
@@ -212,6 +214,7 @@ class HomeState {
     bool? hasMoreData,
     String? selectedTab,
     DateTime? promoEndTime,
+    Map<String, dynamic>? filterCriteria,
   }) {
     return HomeState(
       isLoading: isLoading ?? this.isLoading,
@@ -225,6 +228,7 @@ class HomeState {
       hasMoreData: hasMoreData ?? this.hasMoreData,
       selectedTab: selectedTab ?? this.selectedTab,
       promoEndTime: promoEndTime ?? this.promoEndTime,
+      filterCriteria: filterCriteria ?? this.filterCriteria,
     );
   }
 }

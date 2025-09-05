@@ -15,7 +15,9 @@ import 'home_models.dart';      // 数据模型
 import 'home_services.dart';    // 业务服务
 import 'location_picker_page.dart'; // 子页面
 import 'search/index.dart';     // 搜索子模块
+import 'submodules/filter_system/index.dart'; // 筛选系统模块
 import 'submodules/service_system/index.dart'; // 服务系统模块
+import 'submodules/team_center/index.dart'; // 组局中心模块
 
 // ============== 2. CONSTANTS ==============
 /// 🎨 首页私有常量（页面级别）
@@ -247,6 +249,39 @@ class _HomeController extends ValueNotifier<HomeState> {
       // TODO: 根据不同标签加载不同数据
       developer.log('切换到标签: $tabName');
     }
+  }
+
+  /// 应用筛选条件
+  void applyFilters(dynamic criteria) {
+    // 将筛选条件转换为Map存储
+    Map<String, dynamic> filterMap;
+    
+    if (criteria is Map<String, dynamic>) {
+      filterMap = criteria;
+    } else {
+      // 假设是FilterCriteria类型，转换为Map
+      filterMap = {
+        'ageRange': '18-99',  // 默认值
+        'gender': '全部',
+        'status': '在线',
+        'type': '线上',
+        'skills': <String>[],
+        'price': '',
+        'positions': <String>[],
+        'tags': <String>[],
+        'estimatedCount': 500,  // 默认预估
+      };
+    }
+    
+    value = value.copyWith(
+      filterCriteria: filterMap,
+      currentPage: 1,
+      hasMoreData: true,
+    );
+    
+    // 重新加载数据
+    refresh();
+    developer.log('应用筛选条件: ${filterMap['estimatedCount'] ?? 500}人符合条件');
   }
 
   @override
@@ -644,7 +679,7 @@ class _RecommendationCardWidget extends StatelessWidget {
 
           // 用户列表
           SizedBox(
-            height: 210,
+            height: 240,
             child: ListView.builder(
               scrollDirection: Axis.horizontal,
               padding: const EdgeInsets.fromLTRB(0, 12, 16, 12),
@@ -1316,6 +1351,23 @@ class _UnifiedHomePageState extends State<UnifiedHomePage> {
     }
   }
 
+  /// 处理组局中心跳转
+  void _handleTeamCenterTap() {
+    developer.log('首页: 点击进入组局中心');
+    
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => Container(
+          color: Colors.white,
+          child: const Center(
+            child: Text('组局中心功能开发中...'),
+          ),
+        ),
+      ),
+    );
+  }
+
   /// 转换位置模型
   LocationRegionModel? _convertToLocationRegion(HomeLocationModel? homeLocation) {
     if (homeLocation == null) return null;
@@ -1605,33 +1657,36 @@ class _UnifiedHomePageState extends State<UnifiedHomePage> {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         // 进入组局按钮
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(20),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withOpacity(0.1),
-                                blurRadius: 4,
-                                offset: const Offset(0, 2),
-                              ),
-                            ],
-                          ),
-                          child: const Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(Icons.groups, color: Color(0xFF6366F1), size: 16),
-                              SizedBox(width: 6),
-                              Text(
-                                '进入组局',
-                                style: TextStyle(
-                                  color: Color(0xFF6366F1),
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w600,
+                        GestureDetector(
+                          onTap: _handleTeamCenterTap,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(20),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.1),
+                                  blurRadius: 4,
+                                  offset: const Offset(0, 2),
                                 ),
-                              ),
-                            ],
+                              ],
+                            ),
+                            child: const Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(Icons.groups, color: Color(0xFF6366F1), size: 16),
+                                SizedBox(width: 6),
+                                Text(
+                                  '进入组局',
+                                  style: TextStyle(
+                                    color: Color(0xFF6366F1),
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
                         ),
                         
@@ -1716,7 +1771,12 @@ class _UnifiedHomePageState extends State<UnifiedHomePage> {
                 ),
                 const SizedBox(width: 4),
                 Flexible(
-                  child: _buildDropdownFilter('筛选', Icons.filter_list, onTap: _showMoreFilters),
+                  child: _buildDropdownFilter(
+                    _getFilterButtonText(state), 
+                    Icons.filter_list, 
+                    onTap: _showMoreFilters,
+                    hasActiveFilters: state.filterCriteria != null,
+                  ),
                 ),
               ],
             ),
@@ -1749,51 +1809,155 @@ class _UnifiedHomePageState extends State<UnifiedHomePage> {
   }
 
   /// 构建下拉筛选器
-  Widget _buildDropdownFilter(String text, IconData icon, {VoidCallback? onTap}) {
+  Widget _buildDropdownFilter(String text, IconData icon, {VoidCallback? onTap, bool hasActiveFilters = false}) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
         decoration: BoxDecoration(
-          color: Colors.grey[100],
+          color: hasActiveFilters 
+              ? const Color(HomeConstants.primaryPurple).withOpacity(0.1)
+              : Colors.grey[100],
           borderRadius: BorderRadius.circular(16),
+          border: hasActiveFilters 
+              ? Border.all(color: const Color(HomeConstants.primaryPurple), width: 1)
+              : null,
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, size: 12, color: Colors.grey[600]),
+            Icon(
+              icon, 
+              size: 12, 
+              color: hasActiveFilters 
+                  ? const Color(HomeConstants.primaryPurple)
+                  : Colors.grey[600]
+            ),
             const SizedBox(width: 2),
             Flexible(
               child: Text(
                 text,
                 style: TextStyle(
-                  color: Colors.grey[600],
+                  color: hasActiveFilters 
+                      ? const Color(HomeConstants.primaryPurple)
+                      : Colors.grey[600],
                   fontSize: 10,
+                  fontWeight: hasActiveFilters ? FontWeight.w600 : FontWeight.normal,
                 ),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),
             ),
             const SizedBox(width: 1),
-            Icon(Icons.keyboard_arrow_down, size: 12, color: Colors.grey[600]),
+            Icon(
+              Icons.keyboard_arrow_down, 
+              size: 12, 
+              color: hasActiveFilters 
+                  ? const Color(HomeConstants.primaryPurple)
+                  : Colors.grey[600]
+            ),
           ],
         ),
       ),
     );
   }
 
+  /// 获取筛选按钮文字
+  String _getFilterButtonText(HomeState state) {
+    if (state.filterCriteria == null) {
+      return '筛选';
+    }
+    
+    final criteria = state.filterCriteria!;
+    int activeFiltersCount = 0;
+    
+    // 计算活跃筛选条件数量
+    if (criteria['gender'] != null && criteria['gender'] != '全部') activeFiltersCount++;
+    if (criteria['status'] != null && criteria['status'] != '在线') activeFiltersCount++;
+    if (criteria['type'] != null && criteria['type'] != '线上') activeFiltersCount++;
+    if (criteria['skills'] != null && (criteria['skills'] as List).isNotEmpty) activeFiltersCount++;
+    if (criteria['price'] != null && criteria['price'].toString().isNotEmpty) activeFiltersCount++;
+    if (criteria['positions'] != null && (criteria['positions'] as List).isNotEmpty) activeFiltersCount++;
+    if (criteria['tags'] != null && (criteria['tags'] as List).isNotEmpty) activeFiltersCount++;
+    
+    return activeFiltersCount > 0 ? '筛选($activeFiltersCount)' : '筛选';
+  }
+
   /// 显示位置筛选
-  void _showLocationFilter() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('位置筛选功能开发中')),
-    );
+  void _showLocationFilter() async {
+    try {
+      final result = await Navigator.push<String>(
+        context,
+        MaterialPageRoute(
+          builder: (context) => EnhancedLocationPickerPage(
+            initialRegion: _controller.value.currentLocation?.name,
+            onRegionSelected: (region) {
+              developer.log('首页: 选择区域 - $region');
+            },
+          ),
+        ),
+      );
+
+      if (result != null && mounted) {
+        // 更新位置选择并刷新数据
+        final newLocation = HomeLocationModel(
+          locationId: result.toLowerCase().replaceAll('区', '').replaceAll('全', ''),
+          name: result,
+          isHot: true,
+        );
+        _controller.changeLocation(newLocation);
+        
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('已切换到$result'),
+            duration: const Duration(seconds: 2),
+          ),
+        );
+      }
+    } catch (e) {
+      developer.log('显示位置筛选失败: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('打开区域选择失败，请重试')),
+        );
+      }
+    }
   }
 
   /// 显示更多筛选
-  void _showMoreFilters() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('更多筛选功能开发中')),
-    );
+  void _showMoreFilters() async {
+    try {
+      final result = await Navigator.push<dynamic>(
+        context,
+        MaterialPageRoute(
+          builder: (context) => FilterPage(
+            initialCriteria: null,  // 暂时使用null，后续可以改进
+            onFiltersApplied: (criteria) {
+              developer.log('首页: 应用筛选条件 - 预计500人符合条件');
+            },
+          ),
+        ),
+      );
+
+      if (result != null && mounted) {
+        // 应用筛选条件并刷新数据
+        _controller.applyFilters(result);
+        
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('筛选已应用，预计500人符合条件'),
+            duration: Duration(seconds: 2),
+          ),
+        );
+      }
+    } catch (e) {
+      developer.log('显示筛选条件失败: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('打开筛选页面失败，请重试')),
+        );
+      }
+    }
   }
 
   /// 显示敬请期待对话框

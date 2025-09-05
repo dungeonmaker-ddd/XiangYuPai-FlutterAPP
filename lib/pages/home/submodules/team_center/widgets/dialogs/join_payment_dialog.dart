@@ -11,7 +11,6 @@ import 'dart:developer' as developer;
 // 项目内部文件
 import '../../models/join_models.dart';     // 报名模型
 import '../../services/join_services.dart'; // 报名服务
-import '../../utils/constants.dart';        // 常量定义
 
 // ============== 2. CONSTANTS ==============
 /// 🎨 支付弹窗常量

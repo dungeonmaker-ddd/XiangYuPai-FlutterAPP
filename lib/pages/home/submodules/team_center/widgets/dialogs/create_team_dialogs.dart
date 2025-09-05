@@ -2438,7 +2438,7 @@ class _DeadlinePickerDialogState extends State<DeadlinePickerDialog> {
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
                   color: isSelected
-                      ? _DialogConstants.primaryPurple.withOpacity(0.1)
+                      ? _DialogConstants.primaryPurple.withValues(alpha: 0.1)
                       : _DialogConstants.backgroundGray,
                   borderRadius: BorderRadius.circular(8),
                   border: Border.all(
@@ -2549,7 +2549,7 @@ class _DeadlinePickerDialogState extends State<DeadlinePickerDialog> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: _DialogConstants.successGreen.withOpacity(0.1),
+        color: _DialogConstants.successGreen.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Column(

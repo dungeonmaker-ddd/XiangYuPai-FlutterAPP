@@ -26,17 +26,13 @@ class _PaymentDialogConstants {
   static const Color borderGray = Color(0xFFE5E7EB);
   static const Color successGreen = Color(0xFF10B981);
   static const Color errorRed = Color(0xFFEF4444);
-  static const Color warningOrange = Color(0xFFF59E0B);
-  
+
   // 动画配置
   static const Duration animationDuration = Duration(milliseconds: 300);
-  static const Duration quickAnimationDuration = Duration(milliseconds: 150);
-  
+
   // 弹窗配置
   static const double dialogBorderRadius = 20.0;
   static const double dialogPadding = 24.0;
-  static const double sectionSpacing = 20.0;
-  static const double itemSpacing = 12.0;
 }
 
 // ============== 3. WIDGETS ==============
@@ -132,7 +128,7 @@ class _JoinPaymentDialogState extends State<JoinPaymentDialog>
       animation: _fadeAnimation,
       builder: (context, child) {
         return Container(
-          color: Colors.black.withOpacity(0.5 * _fadeAnimation.value),
+          color: Colors.black.withValues(alpha: 0.5 * _fadeAnimation.value),
           child: Center(
             child: SlideTransition(
               position: _slideAnimation,
@@ -146,7 +142,7 @@ class _JoinPaymentDialogState extends State<JoinPaymentDialog>
                   borderRadius: BorderRadius.circular(_PaymentDialogConstants.dialogBorderRadius),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.1),
+                      color: Colors.black.withValues(alpha: 0.1),
                       blurRadius: 20,
                       offset: const Offset(0, 10),
                     ),
@@ -321,7 +317,7 @@ class _JoinPaymentDialogState extends State<JoinPaymentDialog>
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
             decoration: BoxDecoration(
-              color: _PaymentDialogConstants.successGreen.withOpacity(0.1),
+              color: _PaymentDialogConstants.successGreen.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Row(

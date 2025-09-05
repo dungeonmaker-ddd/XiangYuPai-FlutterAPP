@@ -33,6 +33,8 @@ class _PaymentDialogConstants {
   // 弹窗配置
   static const double dialogBorderRadius = 20.0;
   static const double dialogPadding = 24.0;
+  static const double sectionSpacing = 20.0;
+  static const double itemSpacing = 12.0;
 }
 
 // ============== 3. WIDGETS ==============
@@ -362,10 +364,10 @@ class _JoinPaymentDialogState extends State<JoinPaymentDialog>
         Container(
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
-            color: _PaymentDialogConstants.primaryPurple.withOpacity(0.05),
+            color: _PaymentDialogConstants.primaryPurple.withValues(alpha: 0.05),
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
-              color: _PaymentDialogConstants.primaryPurple.withOpacity(0.2),
+              color: _PaymentDialogConstants.primaryPurple.withValues(alpha: 0.2),
             ),
           ),
           child: Column(
@@ -441,10 +443,10 @@ class _JoinPaymentDialogState extends State<JoinPaymentDialog>
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
                   color: isEnabled
-                      ? (isSelected 
-                          ? _PaymentDialogConstants.primaryPurple.withOpacity(0.1)
+                      ? (isSelected
+                          ? _PaymentDialogConstants.primaryPurple.withValues(alpha: 0.1)
                           : _PaymentDialogConstants.backgroundGray)
-                      : _PaymentDialogConstants.backgroundGray.withOpacity(0.5),
+                      : _PaymentDialogConstants.backgroundGray.withValues(alpha: 0.5),
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(
                     color: isSelected && isEnabled
@@ -653,10 +655,10 @@ class _JoinPaymentDialogState extends State<JoinPaymentDialog>
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: _PaymentDialogConstants.errorRed.withOpacity(0.1),
+        color: _PaymentDialogConstants.errorRed.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(8),
         border: Border.all(
-          color: _PaymentDialogConstants.errorRed.withOpacity(0.3),
+          color: _PaymentDialogConstants.errorRed.withValues(alpha: 0.3),
         ),
       ),
       child: Row(
@@ -702,7 +704,7 @@ class _JoinPaymentDialogState extends State<JoinPaymentDialog>
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: _PaymentDialogConstants.successGreen.withOpacity(0.1),
+              color: _PaymentDialogConstants.successGreen.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Row(

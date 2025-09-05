@@ -1375,7 +1375,7 @@ class _PricingConfigDialogState extends State<PricingConfigDialog> {
             Expanded(
               flex: 1,
               child: DropdownButtonFormField<String>(
-                value: _config.priceUnit ?? '金币',
+                initialValue: _config.priceUnit ?? '金币',
                 decoration: InputDecoration(
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(8),

@@ -10,6 +10,7 @@ import 'dart:async';
 import 'login/unified_login_page.dart';
 import 'login_demo_page.dart';
 import 'home/index.dart';
+import 'discovery/index.dart';
 
 // ============== 2. CONSTANTS ==============
 class _ShowcaseConstants {
@@ -598,10 +599,37 @@ class _ShowcasePageUnifiedState extends State<ShowcasePageUnified> {
         ],
       ),
       
+      // 发现模块
+      DebugOption(
+        id: 'discovery',
+        title: '[3] 🔍 DISCOVERY MODULE',
+        description: 'Content discovery & publishing system',
+        icon: Icons.explore,
+        type: DebugOptionType.toggle,
+        children: [
+          DebugOption(
+            id: 'discovery_main',
+            title: '[3.1] DISCOVERY PAGE',
+            description: 'Main discovery page with Follow/Hot/City tabs',
+            icon: Icons.explore,
+            type: DebugOptionType.navigation,
+            onTap: () => _navigateToDiscoveryMain(),
+          ),
+          DebugOption(
+            id: 'publish_content',
+            title: '[3.2] PUBLISH CONTENT',
+            description: 'Content creation with media, topics & location',
+            icon: Icons.add_circle,
+            type: DebugOptionType.navigation,
+            onTap: () => _navigateToPublishContent(),
+          ),
+        ],
+      ),
+      
       // 其他功能选项
       DebugOption(
         id: 'architecture_comparison',
-        title: '[3] 📊 ARCHITECTURE COMPARISON',
+        title: '[4] 📊 ARCHITECTURE COMPARISON',
         description: 'Compare Single-File vs Multi-Module architectures',
         icon: Icons.architecture,
         type: DebugOptionType.action,
@@ -609,7 +637,7 @@ class _ShowcasePageUnifiedState extends State<ShowcasePageUnified> {
       ),
       DebugOption(
         id: 'ui_components',
-        title: '[4] UI COMPONENTS TEST',
+        title: '[5] UI COMPONENTS TEST',
         description: 'Test various UI components',
         icon: Icons.widgets,
         type: DebugOptionType.action,
@@ -814,6 +842,23 @@ class _ShowcasePageUnifiedState extends State<ShowcasePageUnified> {
   void _navigateToLocationPicker() async {
     // 位置选择功能已整合到UnifiedHomePage中
     _controller.showMessage('位置选择功能已整合到首页中，请在首页中使用');
+  }
+  
+  void _navigateToDiscoveryMain() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const DiscoveryMainPage()),
+    );
+  }
+  
+  void _navigateToPublishContent() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const PublishContentPage(),
+        fullscreenDialog: true, // 全屏模态展示
+      ),
+    );
   }
   
   // 对话框方法

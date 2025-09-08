@@ -1,6 +1,26 @@
 /// 🔐 认证相关数据模型
 /// 符合API规范的请求响应模型定义
 
+/// 🔑 登录方式枚举
+enum LoginMethod {
+  /// 手机号登录
+  phone,
+  /// 邮箱登录
+  email,
+  /// 微信登录
+  wechat,
+  /// QQ登录
+  qq,
+  /// 密码登录
+  password,
+  /// 短信验证码登录
+  smsCode,
+  /// 忘记密码
+  forgotPassword,
+  /// 重置密码
+  resetPassword,
+}
+
 /// 📱 短信验证码发送请求
 class SmsCodeRequest {
   /// 手机号 - 中国大陆格式：1[3-9]xxxxxxxxx

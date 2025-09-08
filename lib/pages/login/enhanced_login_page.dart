@@ -3,18 +3,13 @@
 
 // ============== 1. IMPORTS ==============
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'dart:async';
-
-// 导入通用网络模块
-import '../../core/network/index.dart';
 
 // 导入登录模块
 import 'login_api.dart';
 import 'models/country_model.dart';
 import 'models/auth_models.dart';
 import 'config/auth_config.dart';
-import 'widgets/country_selector.dart';
 import 'widgets/code_input_widget.dart';
 import 'widgets/password_input_widget.dart';
 import 'widgets/phone_input_widget.dart';
@@ -625,9 +620,9 @@ class _MessageDisplay extends StatelessWidget {
       padding: const EdgeInsets.all(12),
       margin: const EdgeInsets.only(bottom: _EnhancedLoginConstants.spacing),
       decoration: BoxDecoration(
-        color: isError 
-            ? _EnhancedLoginConstants.errorColor.withOpacity(0.1) 
-            : _EnhancedLoginConstants.successColor.withOpacity(0.1),
+        color: isError
+            ? _EnhancedLoginConstants.errorColor.withValues(alpha: 0.1)
+            : _EnhancedLoginConstants.successColor.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(8),
         border: Border.all(
           color: isError 

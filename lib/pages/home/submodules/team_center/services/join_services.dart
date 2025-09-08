@@ -12,7 +12,6 @@ import 'dart:developer' as developer;
 // 项目内部文件
 import '../models/team_models.dart';    // 基础团队模型
 import '../models/join_models.dart';    // 报名模型
-import '../utils/constants.dart';       // 常量定义
 
 // ============== 2. CONSTANTS ==============
 /// 🎨 报名服务常量
@@ -163,7 +162,7 @@ class JoinService implements IJoinService {
     'current_user': {
       'id': 'user_001',
       'nickname': '用户昵称123',
-      'avatar': 'https://avatar.example.com/user_001.jpg',
+      'avatar': 'https://picsum.photos/100/100?random=1001',
       'balance': 500, // 金币余额
       'level': 5,
       'isVerified': true,
@@ -185,7 +184,7 @@ class JoinService implements IJoinService {
       'host': {
         'id': 'host_001',
         'nickname': '发起者昵称',
-        'avatar': 'https://avatar.example.com/host_001.jpg',
+        'avatar': 'https://picsum.photos/100/100?random=1002',
       },
       'requirements': {
         'minLevel': 3,

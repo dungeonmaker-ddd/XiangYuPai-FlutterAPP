@@ -4,7 +4,7 @@
 // ============== IMPORTS ==============
 import 'dart:async';
 import 'dart:developer' as developer;
-import 'service_models.dart';
+import '../models/service_models.dart';
 
 // ============== 核心服务类 ==============
 

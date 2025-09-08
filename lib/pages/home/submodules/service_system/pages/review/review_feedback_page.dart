@@ -12,9 +12,7 @@ import 'dart:async';
 import 'dart:developer' as developer;
 
 // 项目内部文件
-import '../../home_models.dart';      // 复用首页数据模型
-import '../../home_services.dart';   // 复用首页服务
-import 'service_models.dart';        // 服务系统数据模型
+import '../../models/service_models.dart';        // 服务系统数据模型
 
 // ============== 2. CONSTANTS ==============
 /// 🎨 评价反馈页私有常量

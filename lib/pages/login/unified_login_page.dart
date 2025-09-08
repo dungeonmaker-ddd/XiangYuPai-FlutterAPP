@@ -3,7 +3,6 @@
 
 // ============== 1. IMPORTS ==============
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'dart:async';
 
 // 现有模块导入
@@ -11,7 +10,6 @@ import 'models/country_model.dart';
 import 'models/auth_models.dart';
 import 'services/auth_service.dart';
 import 'config/auth_config.dart';
-import 'widgets/country_selector.dart';
 import 'widgets/code_input_widget.dart';
 import 'widgets/password_input_widget.dart';
 import 'widgets/phone_input_widget.dart';
@@ -38,13 +36,7 @@ class _LoginConstants {
 }
 
 // ============== 3. MODELS ==============
-/// 登录方式枚举
-enum LoginMethod {
-  password,    // 密码登录
-  smsCode,     // 验证码登录
-  forgotPassword, // 忘记密码
-  resetPassword,  // 重置密码
-}
+// LoginMethod 枚举已移动到 models/auth_models.dart 中统一管理
 
 /// 统一登录状态
 class UnifiedLoginState {
@@ -123,6 +115,14 @@ class UnifiedLoginState {
         return '忘记密码';
       case LoginMethod.resetPassword:
         return '重置密码';
+      case LoginMethod.phone:
+        return '手机号登录';
+      case LoginMethod.email:
+        return '邮箱登录';
+      case LoginMethod.wechat:
+        return '微信登录';
+      case LoginMethod.qq:
+        return 'QQ登录';
     }
   }
   
@@ -137,13 +137,21 @@ class UnifiedLoginState {
         return '请输入您的手机号，我们将发送验证码';
       case LoginMethod.resetPassword:
         return '6-20个字符，不可以是纯数字';
+      case LoginMethod.phone:
+        return '请输入您的手机号';
+      case LoginMethod.email:
+        return '请输入您的邮箱地址';
+      case LoginMethod.wechat:
+        return '使用微信账号登录';
+      case LoginMethod.qq:
+        return '使用QQ账号登录';
     }
   }
   
   /// 是否可以提交表单
   bool get canSubmit {
     if (isLoading) return false;
-    
+
     switch (currentMethod) {
       case LoginMethod.password:
         return isPhoneValid && isPasswordValid;
@@ -153,6 +161,14 @@ class UnifiedLoginState {
         return isPhoneValid;
       case LoginMethod.resetPassword:
         return isPasswordValid;
+      case LoginMethod.phone:
+        return isPhoneValid;
+      case LoginMethod.email:
+        return isPhoneValid; // 暂时复用手机验证逻辑
+      case LoginMethod.wechat:
+        return true; // 第三方登录无需验证
+      case LoginMethod.qq:
+        return true; // 第三方登录无需验证
     }
   }
 }
@@ -563,7 +579,7 @@ class _MessageDisplay extends StatelessWidget {
       padding: const EdgeInsets.all(12),
       margin: const EdgeInsets.only(bottom: _LoginConstants.spacing),
       decoration: BoxDecoration(
-        color: isError ? _LoginConstants.errorColor.withOpacity(0.1) : _LoginConstants.successColor.withOpacity(0.1),
+        color: isError ? _LoginConstants.errorColor.withValues(alpha: 0.1) : _LoginConstants.successColor.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(8),
         border: Border.all(
           color: isError ? _LoginConstants.errorColor : _LoginConstants.successColor,
@@ -733,6 +749,14 @@ class _UnifiedLoginPageState extends State<UnifiedLoginPage> {
         return _buildForgotPasswordForm(state);
       case LoginMethod.resetPassword:
         return _buildResetPasswordForm(state);
+      case LoginMethod.phone:
+        return _buildPasswordForm(state); // 复用密码表单
+      case LoginMethod.email:
+        return _buildPasswordForm(state); // 复用密码表单
+      case LoginMethod.wechat:
+        return _buildThirdPartyForm('微信登录');
+      case LoginMethod.qq:
+        return _buildThirdPartyForm('QQ登录');
     }
   }
   
@@ -900,6 +924,22 @@ class _UnifiedLoginPageState extends State<UnifiedLoginPage> {
         buttonText = '确认';
         onPressed = _controller.resetPassword;
         break;
+      case LoginMethod.phone:
+        buttonText = '登录';
+        onPressed = _controller.loginWithPassword;
+        break;
+      case LoginMethod.email:
+        buttonText = '登录';
+        onPressed = _controller.loginWithPassword;
+        break;
+      case LoginMethod.wechat:
+        buttonText = '微信登录';
+        onPressed = () => _controller.loginWithThirdParty('wechat');
+        break;
+      case LoginMethod.qq:
+        buttonText = 'QQ登录';
+        onPressed = () => _controller.loginWithThirdParty('qq');
+        break;
     }
     
     return _PrimaryButton(
@@ -949,6 +989,38 @@ class _UnifiedLoginPageState extends State<UnifiedLoginPage> {
             onPressed: () => _controller.switchLoginMethod(LoginMethod.password),
             child: const Text(
               '返回登录',
+              style: TextStyle(color: _LoginConstants.primaryColor, fontSize: 16),
+            ),
+          ),
+        );
+      case LoginMethod.phone:
+      case LoginMethod.email:
+        return Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            TextButton(
+              onPressed: () => _controller.switchLoginMethod(LoginMethod.smsCode),
+              child: const Text(
+                '验证码登录',
+                style: TextStyle(color: _LoginConstants.primaryColor, fontSize: 16),
+              ),
+            ),
+            TextButton(
+              onPressed: () => _controller.switchLoginMethod(LoginMethod.forgotPassword),
+              child: const Text(
+                '忘记密码?',
+                style: TextStyle(color: _LoginConstants.primaryColor, fontSize: 16),
+              ),
+            ),
+          ],
+        );
+      case LoginMethod.wechat:
+      case LoginMethod.qq:
+        return Center(
+          child: TextButton(
+            onPressed: () => _controller.switchLoginMethod(LoginMethod.password),
+            child: const Text(
+              '其他登录方式',
               style: TextStyle(color: _LoginConstants.primaryColor, fontSize: 16),
             ),
           ),
@@ -1023,6 +1095,61 @@ class _UnifiedLoginPageState extends State<UnifiedLoginPage> {
         ],
       ),
     );
+  }
+
+  /// 构建第三方登录表单
+  Widget _buildThirdPartyForm(String loginType) {
+    return Center(
+      child: Column(
+        children: [
+          const SizedBox(height: 40),
+          Icon(
+            loginType.contains('微信') ? Icons.chat : Icons.account_circle,
+            size: 80,
+            color: _LoginConstants.primaryColor,
+          ),
+          const SizedBox(height: 20),
+          Text(
+            '点击下方按钮使用$loginType',
+            style: const TextStyle(
+              fontSize: 16,
+              color: _LoginConstants.hintColor,
+            ),
+          ),
+          const SizedBox(height: 40),
+        ],
+      ),
+    );
+  }
+}
+
+// 在 _UnifiedLoginController 中添加第三方登录方法的扩展
+extension _UnifiedLoginControllerExtension on _UnifiedLoginController {
+  /// 第三方登录
+  Future<void> loginWithThirdParty(String platform) async {
+    value = value.copyWith(isLoading: true, errorMessage: null);
+
+    try {
+      // 模拟第三方登录
+      await Future.delayed(const Duration(seconds: 2));
+
+      // 模拟登录成功
+      value = value.copyWith(
+        isLoading: false,
+        userInfo: UserInfo(
+          userId: '${platform}_user_123',
+          mobile: '138****8888',
+          nickname: '$platform用户',
+          avatarUrl: '',
+        ),
+        successMessage: '$platform登录成功',
+      );
+    } catch (e) {
+      value = value.copyWith(
+        isLoading: false,
+        errorMessage: '$platform登录失败，请重试',
+      );
+    }
   }
 }
 

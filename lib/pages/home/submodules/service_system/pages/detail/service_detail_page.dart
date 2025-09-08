@@ -12,10 +12,8 @@ import 'dart:async';
 import 'dart:developer' as developer;
 
 // 项目内部文件
-import '../../home_models.dart';      // 复用首页数据模型
-import '../../home_services.dart';   // 复用首页服务
-import 'service_models.dart';        // 服务系统数据模型
-import 'order_confirm_page.dart';    // 订单确认页面
+import '../../models/service_models.dart';        // 服务系统数据模型
+import '../order/order_confirm_page.dart';        // 订单确认页面
 
 // ============== 2. CONSTANTS ==============
 /// 🎨 服务详情页私有常量

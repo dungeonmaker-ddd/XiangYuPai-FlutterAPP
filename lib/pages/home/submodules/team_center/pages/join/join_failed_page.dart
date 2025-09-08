@@ -12,7 +12,6 @@ import 'dart:developer' as developer;
 import '../../models/team_models.dart';    // 基础团队模型
 import '../../models/join_models.dart';    // 报名模型
 import '../../services/join_services.dart';  // 报名服务
-import '../../utils/constants.dart';       // 常量定义
 
 // ============== 2. CONSTANTS ==============
 /// 🎨 失败页面常量

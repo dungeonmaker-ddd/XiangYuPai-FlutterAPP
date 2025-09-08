@@ -1,9 +1,11 @@
-/// 🏗️ 组局中心 - 数据模型层导出文件
+/// 🎯 组局中心数据模型统一导出文件
 /// 
-/// 统一导出所有数据模型，提供清晰的API接口
+/// 模型分类：
+/// - team_models.dart: 团队相关数据模型
+/// - join_models.dart: 报名相关数据模型
 
-// 📊 团队相关模型
+// 团队模型
 export 'team_models.dart';
 
-// 📝 报名相关模型  
+// 报名模型  
 export 'join_models.dart';

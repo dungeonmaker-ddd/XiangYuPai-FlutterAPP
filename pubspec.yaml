@@ -46,6 +46,21 @@ dependencies:
   
   # 📅 时间处理
   intl: ^0.19.0
+  
+  # 📷 媒体选择
+  image_picker: ^1.0.4
+  
+  # 🔐 权限管理
+  permission_handler: ^11.0.1
+  
+  # 📹 视频播放
+  video_player: ^2.8.1
+  
+  # 🔗 分享功能
+  share_plus: ^7.2.1
+  
+  # 🌐 URL启动
+  url_launcher: ^6.2.1
 
 dev_dependencies:
   flutter_test:

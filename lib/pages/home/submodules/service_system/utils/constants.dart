@@ -1,6 +1,8 @@
 /// 🎯 服务系统常量定义文件
-/// 
+///
 /// 包含服务系统模块的所有常量配置
+
+import 'package:flutter/material.dart';
 
 /// 🎨 服务系统常量
 class ServiceSystemConstants {

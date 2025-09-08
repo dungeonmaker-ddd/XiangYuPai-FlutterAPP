@@ -12,10 +12,9 @@ import 'dart:developer' as developer;
 
 // 项目内部文件 - 按依赖关系排序
 import '../../models/team_models.dart';      // 数据模型
+import '../../services/team_services.dart';    // 业务服务
 import '../../models/join_models.dart';      // 报名相关模型
-import '../../services/team_services.dart';  // 业务服务
-import '../../utils/constants.dart';         // 常量定义
-import '../../widgets/dialogs/create_team_dialogs.dart'; // 选择器对话框
+import 'create_team_dialogs.dart'; // 选择器对话框
 
 // ============== 2. CONSTANTS ==============
 /// 🎨 发布组局页面增强版常量

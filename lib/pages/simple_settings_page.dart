@@ -7,7 +7,7 @@ import 'package:flutter/cupertino.dart';
 
 // ============== 2. CONSTANTS ==============
 class _SettingsConstants {
-  static const double itemHeight = 56.0;
+  // static const double itemHeight = 56.0; // 暂时未使用
   static const double iconSize = 24.0;
   static const EdgeInsets contentPadding = EdgeInsets.symmetric(horizontal: 16.0);
 }
@@ -327,5 +327,3 @@ class _SimpleSettingsPageState extends State<SimpleSettingsPage> {
   }
 }
 
-// ============== 8. EXPORTS ==============
-export 'simple_settings_page.dart' show SimpleSettingsPage;

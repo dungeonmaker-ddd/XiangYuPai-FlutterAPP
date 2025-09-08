@@ -12,9 +12,9 @@ import 'dart:developer' as developer;
 
 // 项目内部文件 - 按依赖关系排序
 import '../../models/team_models.dart';      // 数据模型
-import '../../services/team_services.dart';  // 业务服务
+import '../../services/team_services.dart';    // 业务服务
 import '../../utils/constants.dart';         // 常量定义
-import '../join/join_confirm_page.dart';     // 报名确认页面
+import '../join/join_confirm_page.dart'; // 报名确认页面
 
 // ============== 2. CONSTANTS ==============
 /// 🎨 组局详情页面私有常量

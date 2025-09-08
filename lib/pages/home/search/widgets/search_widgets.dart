@@ -108,7 +108,10 @@ class _SearchContentCardState extends State<SearchContentCard>
               scale: _scaleAnimation.value,
               child: Container(
                 margin: const EdgeInsets.all(4),
-                height: _SearchWidgetConstants.contentCardMaxHeight,
+                constraints: const BoxConstraints(
+                  minHeight: _SearchWidgetConstants.contentCardMinHeight,
+                  maxHeight: _SearchWidgetConstants.contentCardMaxHeight,
+                ),
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(SearchConstants.cardBorderRadius),
@@ -124,18 +127,18 @@ class _SearchContentCardState extends State<SearchContentCard>
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     // 主图片/视频区域
-                    Flexible(
+                    Expanded(
                       flex: 3,
                       child: _buildMediaSection(),
                     ),
-                    
+
                     // 内容信息区域
-                    Flexible(
+                    Expanded(
                       flex: 2,
                       child: _buildContentSection(),
                     ),
-                    
-                    // 底部用户信息区域
+
+                    // 底部用户信息区域（固定高度）
                     _buildAuthorSection(),
                   ],
                 ),
@@ -231,20 +234,23 @@ class _SearchContentCardState extends State<SearchContentCard>
       padding: const EdgeInsets.all(12),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
         children: [
           // 标题/内容
-          _buildHighlightedText(
-            widget.item.title.isNotEmpty ? widget.item.title : widget.item.content,
-            maxLines: 3,
-            style: const TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w500,
-              height: 1.3,
+          Flexible(
+            child: _buildHighlightedText(
+              widget.item.title.isNotEmpty ? widget.item.title : widget.item.content,
+              maxLines: 3,
+              style: const TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+                height: 1.3,
+              ),
             ),
           ),
-          
+
           const SizedBox(height: 8),
-          
+
           // 互动数据
           Row(
             children: [
@@ -872,7 +878,10 @@ class SearchTopicCard extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        height: _SearchWidgetConstants.topicCardHeight,
+        constraints: const BoxConstraints(
+          minHeight: _SearchWidgetConstants.topicCardHeight,
+          maxHeight: _SearchWidgetConstants.topicCardHeight + 20, // 增加一些弹性空间
+        ),
         margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
@@ -902,12 +911,35 @@ class SearchTopicCard extends StatelessWidget {
                       child: Image.network(
                         topic.icon!,
                         fit: BoxFit.cover,
+                        loadingBuilder: (context, child, loadingProgress) {
+                          if (loadingProgress == null) return child;
+                          return Center(
+                            child: CircularProgressIndicator(
+                              value: loadingProgress.expectedTotalBytes != null
+                                  ? loadingProgress.cumulativeBytesLoaded / loadingProgress.expectedTotalBytes!
+                                  : null,
+                              strokeWidth: 2,
+                            ),
+                          );
+                        },
                         errorBuilder: (context, error, stackTrace) {
-                          return Icon(Icons.topic, color: Colors.grey[400]);
+                          return Container(
+                            decoration: BoxDecoration(
+                              color: Colors.grey[100],
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Icon(Icons.topic, color: Colors.grey[400], size: 24),
+                          );
                         },
                       ),
                     )
-                  : Icon(Icons.topic, color: Colors.grey[400]),
+                  : Container(
+                      decoration: BoxDecoration(
+                        color: Colors.grey[100],
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Icon(Icons.topic, color: Colors.grey[400], size: 24),
+                    ),
             ),
             
             const SizedBox(width: 12),
@@ -917,6 +949,7 @@ class SearchTopicCard extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisAlignment: MainAxisAlignment.center,
+                mainAxisSize: MainAxisSize.min,
                 children: [
                   // 话题名称和标识
                   Row(
@@ -954,11 +987,13 @@ class SearchTopicCard extends StatelessWidget {
                   const SizedBox(height: 4),
                   
                   // 话题描述
-                  _buildHighlightedText(
-                    topic.description,
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Colors.grey[600],
+                  Flexible(
+                    child: _buildHighlightedText(
+                      topic.description,
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.grey[600],
+                      ),
                     ),
                   ),
                 ],

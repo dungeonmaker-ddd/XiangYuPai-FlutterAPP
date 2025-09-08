@@ -1,0 +1,58 @@
+卷 系统 的文件夹 PATH 列表
+卷序列号为 FE46-EF7B
+C:.
+│  create_team_dialogs.dart
+│  create_team_page.dart
+│  create_team_page_enhanced.dart
+│  index.dart
+│  join_confirm_page.dart
+│  join_failed_page.dart
+│  join_models.dart
+│  join_payment_dialog.dart
+│  join_services.dart
+│  join_status_page.dart
+│  join_success_page.dart
+│  join_waiting_page.dart
+│  team_detail_page.dart
+│  team_models.dart
+│  team_services.dart
+│  tree.txt
+│  组局发布支付功能架构设计.md
+│  组局报名流程架构设计.md
+│  
+├─docs
+│      MIGRATION_GUIDE.md
+│      README.md
+│      
+├─models
+│      index.dart
+│      
+├─pages
+│  │  index.dart
+│  │  
+│  ├─create
+│  │      create_team_page.dart
+│  │      index.dart
+│  │      
+│  ├─detail
+│  │      index.dart
+│  │      
+│  ├─join
+│  │      index.dart
+│  │      
+│  └─main
+│          index.dart
+│          
+├─services
+│      index.dart
+│      
+├─utils
+│      constants.dart
+│      date_utils.dart
+│      formatters.dart
+│      index.dart
+│      validators.dart
+│      
+└─widgets
+        index.dart
+        

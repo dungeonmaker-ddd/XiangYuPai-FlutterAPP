@@ -6,7 +6,7 @@ import 'dart:developer' as developer;
 import 'package:shared_preferences/shared_preferences.dart';
 
 // 导入通用网络模块
-import '../../core/network/index.dart';
+import '../../core/network/index.dart' as network;
 
 // 导入登录模块的数据模型
 import 'models/auth_models.dart';

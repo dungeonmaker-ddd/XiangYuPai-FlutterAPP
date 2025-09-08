@@ -15,9 +15,11 @@ import 'home_models.dart';      // 数据模型
 import 'home_services.dart';    // 业务服务
 import 'location_picker_page.dart'; // 子页面
 import 'search/index.dart';     // 搜索子模块
-import 'submodules/filter_system/index.dart'; // 筛选系统模块
 import 'submodules/service_system/index.dart'; // 服务系统模块
 import 'submodules/team_center/index.dart'; // 组局中心模块
+import 'submodules/filter_system/enhanced_location_picker_page.dart'; // 增强版区域选择页面
+import 'submodules/filter_system/filter_page.dart'; // 筛选条件页面
+import '../discovery/index.dart' as discovery; // 发现模块（包含发布动态页面）- 使用别名避免命名冲突
 
 // ============== 2. CONSTANTS ==============
 /// 🎨 首页私有常量（页面级别）
@@ -77,8 +79,10 @@ class _HomeController extends ValueNotifier<HomeState> {
   }
 
   late ScrollController _scrollController;
+  int _currentTabIndex = 0; // 当前选中的Tab索引
 
   ScrollController get scrollController => _scrollController;
+  int get currentTabIndex => _currentTabIndex;
 
   /// 初始化数据
   Future<void> _initialize() async {
@@ -251,37 +255,56 @@ class _HomeController extends ValueNotifier<HomeState> {
     }
   }
 
+  /// 更新选中的区域
+  void updateSelectedRegion(String region) {
+    value = value.copyWith(selectedRegion: region);
+    refresh(); // 区域变更后刷新数据
+    developer.log('更新区域: $region');
+  }
+
   /// 应用筛选条件
-  void applyFilters(dynamic criteria) {
-    // 将筛选条件转换为Map存储
-    Map<String, dynamic> filterMap;
-    
-    if (criteria is Map<String, dynamic>) {
-      filterMap = criteria;
-    } else {
-      // 假设是FilterCriteria类型，转换为Map
-      filterMap = {
-        'ageRange': '18-99',  // 默认值
-        'gender': '全部',
-        'status': '在线',
-        'type': '线上',
-        'skills': <String>[],
-        'price': '',
-        'positions': <String>[],
-        'tags': <String>[],
-        'estimatedCount': 500,  // 默认预估
-      };
-    }
-    
+  void applyFilters(Map<String, dynamic> filters) {
+    value = value.copyWith(activeFilters: filters);
+    refresh(); // 筛选条件变更后刷新数据
+    developer.log('应用筛选条件: $filters');
+  }
+
+  /// 清除筛选条件
+  void clearFilters() {
     value = value.copyWith(
-      filterCriteria: filterMap,
-      currentPage: 1,
-      hasMoreData: true,
+      activeFilters: null,
+      selectedRegion: null,
     );
-    
-    // 重新加载数据
-    refresh();
-    developer.log('应用筛选条件: ${filterMap['estimatedCount'] ?? 500}人符合条件');
+    refresh(); // 清除筛选后刷新数据
+    developer.log('清除筛选条件');
+  }
+
+  /// 切换底部Tab
+  void switchBottomTab(int index) {
+    if (_currentTabIndex != index) {
+      _currentTabIndex = index;
+      developer.log('切换底部Tab: $index');
+      // 这里可以根据需要通知状态变化
+      // notifyListeners(); // 如果需要UI更新的话
+    }
+  }
+
+  /// 获取当前筛选状态摘要
+  String getFilterSummary() {
+    final filters = value.activeFilters;
+    final region = value.selectedRegion;
+
+    List<String> summaryParts = [];
+
+    if (region != null && region != '全深圳') {
+      summaryParts.add('区域: $region');
+    }
+
+    if (filters != null && filters.isNotEmpty) {
+      summaryParts.add('筛选: ${filters.length}项');
+    }
+
+    return summaryParts.isEmpty ? '无筛选' : summaryParts.join(' | ');
   }
 
   @override
@@ -1044,6 +1067,17 @@ class UnifiedHomePage extends StatefulWidget {
   State<UnifiedHomePage> createState() => _UnifiedHomePageState();
 }
 
+/// 🏠 统一首页（无底部导航版本）
+/// 
+/// 用于MainTabPage中的IndexedStack，移除了内部的底部导航栏
+/// 避免与主Tab页面的底部导航冲突
+class UnifiedHomePageWithoutBottomNav extends StatefulWidget {
+  const UnifiedHomePageWithoutBottomNav({super.key});
+
+  @override
+  State<UnifiedHomePageWithoutBottomNav> createState() => _UnifiedHomePageWithoutBottomNavState();
+}
+
 class _UnifiedHomePageState extends State<UnifiedHomePage> {
   late final _HomeController _controller;
 
@@ -1084,6 +1118,17 @@ class _UnifiedHomePageState extends State<UnifiedHomePage> {
           return _buildMainContent(state);
         },
       ),
+      // 底部Tab导航栏
+      bottomNavigationBar: _buildBottomNavigationBar(),
+      // 发布动态浮动按钮
+      floatingActionButton: FloatingActionButton(
+        onPressed: _handlePublishContent,
+        backgroundColor: const Color(HomeConstants.primaryPurple),
+        foregroundColor: Colors.white,
+        elevation: 6,
+        child: const Icon(Icons.add, size: 28),
+      ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
     );
   }
 
@@ -1354,16 +1399,11 @@ class _UnifiedHomePageState extends State<UnifiedHomePage> {
   /// 处理组局中心跳转
   void _handleTeamCenterTap() {
     developer.log('首页: 点击进入组局中心');
-    
+
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => Container(
-          color: Colors.white,
-          child: const Center(
-            child: Text('组局中心功能开发中...'),
-          ),
-        ),
+        builder: (context) => const TeamCenterMainPage(),
       ),
     );
   }
@@ -1766,16 +1806,41 @@ class _UnifiedHomePageState extends State<UnifiedHomePage> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
+                // 清除筛选按钮（仅在有筛选条件时显示）
+                if (state.selectedRegion != null || state.activeFilters?.isNotEmpty == true)
+                  GestureDetector(
+                    onTap: _clearAllFilters,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: Colors.red[50],
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: Colors.red[300]!, width: 1),
+                      ),
+                      child: Icon(
+                        Icons.clear,
+                        size: 12,
+                        color: Colors.red[600],
+                      ),
+                    ),
+                  ),
+                if (state.selectedRegion != null || state.activeFilters?.isNotEmpty == true)
+                  const SizedBox(width: 4),
                 Flexible(
-                  child: _buildDropdownFilter('区域', Icons.location_on, onTap: _showLocationFilter),
+                  child: _buildDropdownFilter(
+                    state.selectedRegion ?? '区域',
+                    Icons.location_on,
+                    onTap: _showLocationFilter,
+                    isActive: state.selectedRegion != null,
+                  ),
                 ),
                 const SizedBox(width: 4),
                 Flexible(
                   child: _buildDropdownFilter(
-                    _getFilterButtonText(state), 
-                    Icons.filter_list, 
+                    state.activeFilters?.isNotEmpty == true ? '筛选(${state.activeFilters!.length})' : '筛选',
+                    Icons.filter_list,
                     onTap: _showMoreFilters,
-                    hasActiveFilters: state.filterCriteria != null,
+                    isActive: state.activeFilters?.isNotEmpty == true,
                   ),
                 ),
               ],
@@ -1809,40 +1874,32 @@ class _UnifiedHomePageState extends State<UnifiedHomePage> {
   }
 
   /// 构建下拉筛选器
-  Widget _buildDropdownFilter(String text, IconData icon, {VoidCallback? onTap, bool hasActiveFilters = false}) {
+  Widget _buildDropdownFilter(String text, IconData icon, {VoidCallback? onTap, bool isActive = false}) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
         decoration: BoxDecoration(
-          color: hasActiveFilters 
-              ? const Color(HomeConstants.primaryPurple).withOpacity(0.1)
-              : Colors.grey[100],
+          color: isActive ? const Color(0xFF8B5CF6).withValues(alpha: 0.1) : Colors.grey[100],
           borderRadius: BorderRadius.circular(16),
-          border: hasActiveFilters 
-              ? Border.all(color: const Color(HomeConstants.primaryPurple), width: 1)
-              : null,
+          border: isActive ? Border.all(color: const Color(0xFF8B5CF6), width: 1) : null,
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(
-              icon, 
-              size: 12, 
-              color: hasActiveFilters 
-                  ? const Color(HomeConstants.primaryPurple)
-                  : Colors.grey[600]
+              icon,
+              size: 12,
+              color: isActive ? const Color(0xFF8B5CF6) : Colors.grey[600],
             ),
             const SizedBox(width: 2),
             Flexible(
               child: Text(
                 text,
                 style: TextStyle(
-                  color: hasActiveFilters 
-                      ? const Color(HomeConstants.primaryPurple)
-                      : Colors.grey[600],
+                  color: isActive ? const Color(0xFF8B5CF6) : Colors.grey[600],
                   fontSize: 10,
-                  fontWeight: hasActiveFilters ? FontWeight.w600 : FontWeight.normal,
+                  fontWeight: isActive ? FontWeight.w600 : FontWeight.normal,
                 ),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
@@ -1850,11 +1907,9 @@ class _UnifiedHomePageState extends State<UnifiedHomePage> {
             ),
             const SizedBox(width: 1),
             Icon(
-              Icons.keyboard_arrow_down, 
-              size: 12, 
-              color: hasActiveFilters 
-                  ? const Color(HomeConstants.primaryPurple)
-                  : Colors.grey[600]
+              Icons.keyboard_arrow_down,
+              size: 12,
+              color: isActive ? const Color(0xFF8B5CF6) : Colors.grey[600],
             ),
           ],
         ),
@@ -1862,101 +1917,171 @@ class _UnifiedHomePageState extends State<UnifiedHomePage> {
     );
   }
 
-  /// 获取筛选按钮文字
-  String _getFilterButtonText(HomeState state) {
-    if (state.filterCriteria == null) {
-      return '筛选';
-    }
-    
-    final criteria = state.filterCriteria!;
-    int activeFiltersCount = 0;
-    
-    // 计算活跃筛选条件数量
-    if (criteria['gender'] != null && criteria['gender'] != '全部') activeFiltersCount++;
-    if (criteria['status'] != null && criteria['status'] != '在线') activeFiltersCount++;
-    if (criteria['type'] != null && criteria['type'] != '线上') activeFiltersCount++;
-    if (criteria['skills'] != null && (criteria['skills'] as List).isNotEmpty) activeFiltersCount++;
-    if (criteria['price'] != null && criteria['price'].toString().isNotEmpty) activeFiltersCount++;
-    if (criteria['positions'] != null && (criteria['positions'] as List).isNotEmpty) activeFiltersCount++;
-    if (criteria['tags'] != null && (criteria['tags'] as List).isNotEmpty) activeFiltersCount++;
-    
-    return activeFiltersCount > 0 ? '筛选($activeFiltersCount)' : '筛选';
-  }
-
   /// 显示位置筛选
   void _showLocationFilter() async {
-    try {
-      final result = await Navigator.push<String>(
-        context,
-        MaterialPageRoute(
-          builder: (context) => EnhancedLocationPickerPage(
-            initialRegion: _controller.value.currentLocation?.name,
-            onRegionSelected: (region) {
-              developer.log('首页: 选择区域 - $region');
-            },
-          ),
-        ),
-      );
+    final result = await Navigator.push<String>(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const EnhancedLocationPickerPage(),
+      ),
+    );
 
-      if (result != null && mounted) {
-        // 更新位置选择并刷新数据
-        final newLocation = HomeLocationModel(
-          locationId: result.toLowerCase().replaceAll('区', '').replaceAll('全', ''),
-          name: result,
-          isHot: true,
-        );
-        _controller.changeLocation(newLocation);
-        
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('已切换到$result'),
-            duration: const Duration(seconds: 2),
-          ),
-        );
-      }
-    } catch (e) {
-      developer.log('显示位置筛选失败: $e');
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('打开区域选择失败，请重试')),
-        );
-      }
+    if (result != null) {
+      // 更新控制器中的选中区域
+      _controller.updateSelectedRegion(result);
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('已选择区域：$result')),
+      );
     }
   }
 
   /// 显示更多筛选
   void _showMoreFilters() async {
-    try {
-      final result = await Navigator.push<dynamic>(
-        context,
-        MaterialPageRoute(
-          builder: (context) => FilterPage(
-            initialCriteria: null,  // 暂时使用null，后续可以改进
-            onFiltersApplied: (criteria) {
-              developer.log('首页: 应用筛选条件 - 预计500人符合条件');
-            },
-          ),
-        ),
+    final result = await Navigator.push<FilterCriteria>(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const FilterPage(),
+      ),
+    );
+
+    if (result != null) {
+      // 将筛选条件转换为Map并应用到控制器
+      final filterMap = _convertFilterCriteriaToMap(result);
+      _controller.applyFilters(filterMap);
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('筛选条件已应用')),
       );
 
-      if (result != null && mounted) {
-        // 应用筛选条件并刷新数据
-        _controller.applyFilters(result);
-        
+      _applyFilterCriteria(result);
+    }
+  }
+
+  /// 应用筛选条件
+  void _applyFilterCriteria(FilterCriteria criteria) {
+    // 这里可以将筛选条件传递给控制器
+    // _controller.applyFilter(criteria);
+
+    // 显示筛选条件摘要
+    final summary = _buildFilterSummary(criteria);
+    if (summary.isNotEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('已应用筛选：$summary'),
+          duration: const Duration(seconds: 3),
+        ),
+      );
+    }
+  }
+
+  /// 构建筛选条件摘要
+  String _buildFilterSummary(FilterCriteria criteria) {
+    List<String> summaryParts = [];
+
+    // 年龄范围
+    if (criteria.ageRange.start > 18 || criteria.ageRange.end < 99) {
+      summaryParts.add('年龄${criteria.ageRange.start.round()}-${criteria.ageRange.end.round()}岁');
+    }
+
+    // 性别
+    if (criteria.gender != '全部') {
+      summaryParts.add('性别${criteria.gender}');
+    }
+
+    // 状态
+    if (criteria.status != '在线') {
+      summaryParts.add('状态${criteria.status}');
+    }
+
+    // 类型
+    if (criteria.type != '线上') {
+      summaryParts.add('类型${criteria.type}');
+    }
+
+    // 技能
+    if (criteria.skills.isNotEmpty) {
+      summaryParts.add('技能${criteria.skills.length}项');
+    }
+
+    // 价格
+    if (criteria.price.isNotEmpty) {
+      summaryParts.add('价格${criteria.price}');
+    }
+
+    // 位置
+    if (criteria.positions.isNotEmpty) {
+      summaryParts.add('位置${criteria.positions.length}项');
+    }
+
+    // 标签
+    if (criteria.tags.isNotEmpty) {
+      summaryParts.add('标签${criteria.tags.length}项');
+    }
+
+    return summaryParts.join('、');
+  }
+
+  /// 将FilterCriteria转换为Map
+  Map<String, dynamic> _convertFilterCriteriaToMap(FilterCriteria criteria) {
+    return {
+      'ageRange': {
+        'start': criteria.ageRange.start,
+        'end': criteria.ageRange.end,
+      },
+      'gender': criteria.gender,
+      'status': criteria.status,
+      'type': criteria.type,
+      'skills': criteria.skills,
+      'price': criteria.price,
+      'positions': criteria.positions,
+      'tags': criteria.tags,
+    };
+  }
+
+  /// 清除所有筛选条件
+  void _clearAllFilters() {
+    _controller.clearFilters();
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('已清除所有筛选条件')),
+    );
+  }
+
+  /// 处理发布动态按钮点击
+  void _handlePublishContent() async {
+    developer.log('首页: 点击发布动态按钮');
+    
+    try {
+      final result = await Navigator.push<bool>(
+        context,
+        MaterialPageRoute(
+          builder: (context) => const discovery.PublishContentPage(),
+          // 全屏模态展示，从底部滑入
+          fullscreenDialog: true,
+        ),
+      );
+      
+      // 如果发布成功，显示提示并刷新首页数据
+      if (result == true) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('筛选已应用，预计500人符合条件'),
+            content: Text('🎉 发布成功！'),
+            backgroundColor: Color(HomeConstants.primaryPurple),
             duration: Duration(seconds: 2),
           ),
         );
+        
+        // 刷新首页数据以显示最新内容
+        _controller.refresh();
       }
     } catch (e) {
-      developer.log('显示筛选条件失败: $e');
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('打开筛选页面失败，请重试')),
-        );
-      }
+      developer.log('打开发布动态页面失败: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('打开发布页面失败，请重试'),
+          backgroundColor: Colors.red,
+        ),
+      );
     }
   }
 
@@ -1974,6 +2099,966 @@ class _UnifiedHomePageState extends State<UnifiedHomePage> {
           ),
         ],
       ),
+    );
+  }
+
+  /// 构建底部导航栏
+  Widget _buildBottomNavigationBar() {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 10,
+            offset: const Offset(0, -2),
+          ),
+        ],
+      ),
+      child: SafeArea(
+        child: SizedBox(
+          height: 60,
+          child: Row(
+            children: [
+              _buildBottomTabItem(0, Icons.home, '首页'),
+              _buildBottomTabItem(1, Icons.explore, '发现'),
+              _buildBottomTabItem(2, Icons.message, '消息'),
+              _buildBottomTabItem(3, Icons.person, '我的'),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// 构建底部Tab项
+  Widget _buildBottomTabItem(int index, IconData icon, String label) {
+    final isSelected = _controller.currentTabIndex == index;
+    
+    return Expanded(
+      child: GestureDetector(
+        onTap: () => _handleTabTap(index),
+        behavior: HitTestBehavior.opaque,
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 8),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                icon,
+                size: 24,
+                color: isSelected 
+                    ? const Color(HomeConstants.primaryPurple) 
+                    : Colors.grey[600],
+              ),
+              const SizedBox(height: 4),
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                  color: isSelected 
+                      ? const Color(HomeConstants.primaryPurple) 
+                      : Colors.grey[600],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// 处理Tab点击
+  void _handleTabTap(int index) {
+    if (index == _controller.currentTabIndex) {
+      // 如果点击的是当前Tab，可以执行刷新或回到顶部等操作
+      if (index == 0) {
+        // 首页Tab：滚动到顶部
+        _controller.scrollController.animateTo(
+          0,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeInOut,
+        );
+      }
+      return;
+    }
+
+    // 切换Tab
+    _controller.switchBottomTab(index);
+    
+    // 根据Tab索引进行页面跳转
+    switch (index) {
+      case 0:
+        // 首页 - 当前页面，无需跳转
+        break;
+      case 1:
+        // 发现页面
+        _navigateToDiscovery();
+        break;
+      case 2:
+        // 消息页面
+        _navigateToMessages();
+        break;
+      case 3:
+        // 我的页面
+        _navigateToProfile();
+        break;
+    }
+  }
+
+  /// 跳转到发现页面
+  void _navigateToDiscovery() {
+    developer.log('导航到发现页面');
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const discovery.DiscoveryMainPage(),
+      ),
+    ).then((_) {
+      // 返回时重置Tab状态
+      _controller.switchBottomTab(0);
+    });
+  }
+
+  /// 跳转到消息页面
+  void _navigateToMessages() {
+    developer.log('导航到消息页面');
+    _showComingSoonDialog('消息功能');
+    // 重置Tab状态
+    _controller.switchBottomTab(0);
+  }
+
+  /// 跳转到个人中心页面
+  void _navigateToProfile() {
+    developer.log('导航到个人中心页面');
+    _showComingSoonDialog('个人中心');
+    // 重置Tab状态
+    _controller.switchBottomTab(0);
+  }
+}
+
+/// 🏠 统一首页（无底部导航版本）的状态管理类
+class _UnifiedHomePageWithoutBottomNavState extends State<UnifiedHomePageWithoutBottomNav> {
+  late final _HomeController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = _HomeController();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    // 设置状态栏样式（适配渐变紫色背景）
+    SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
+      statusBarColor: Colors.transparent, // 透明状态栏
+      statusBarIconBrightness: Brightness.light, // 白色图标（适配紫色背景）
+      statusBarBrightness: Brightness.dark, // iOS状态栏暗色模式
+    ));
+    
+    return Scaffold(
+      backgroundColor: const Color(HomeConstants.homeBackgroundColor),
+      body: ValueListenableBuilder<HomeState>(
+        valueListenable: _controller,
+        builder: (context, state, child) {
+          if (state.isLoading && state.nearbyUsers.isEmpty) {
+            return _buildLoadingView();
+          }
+
+          if (state.errorMessage != null && state.nearbyUsers.isEmpty) {
+            return _buildErrorView(state.errorMessage!);
+          }
+
+          return _buildMainContent(state);
+        },
+      ),
+      // 注意：这里没有bottomNavigationBar和floatingActionButton
+      // 它们由MainTabPage统一管理
+    );
+  }
+
+  /// 构建加载视图
+  Widget _buildLoadingView() {
+    return const Center(
+      child: CircularProgressIndicator(
+        valueColor: AlwaysStoppedAnimation<Color>(Color(HomeConstants.primaryPurple)),
+      ),
+    );
+  }
+
+  /// 构建错误视图
+  Widget _buildErrorView(String errorMessage) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.error_outline, size: 64, color: Colors.grey[400]),
+          const SizedBox(height: 16),
+          Text(errorMessage, style: TextStyle(fontSize: 16, color: Colors.grey[600])),
+          const SizedBox(height: 16),
+          ElevatedButton(
+            onPressed: () => _controller.refresh(),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(HomeConstants.primaryPurple),
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('重试'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// 构建主要内容
+  Widget _buildMainContent(HomeState state) {
+    return RefreshIndicator(
+      color: const Color(HomeConstants.primaryPurple),
+      onRefresh: _controller.refresh,
+      child: CustomScrollView(
+        controller: _controller.scrollController,
+        slivers: [
+          // 顶部导航区域（渐变紫色背景）
+          SliverToBoxAdapter(
+            child: _TopNavigationWidget(
+              currentLocation: state.currentLocation?.name,
+              onLocationTap: _handleLocationTap,
+              onSearchSubmitted: null, // 搜索功能已移至专用搜索页面
+            ),
+          ),
+
+          // 游戏推广横幅 (作为poster在功能服务网格上方)
+          SliverToBoxAdapter(child: _buildGameBanner()),
+
+          // 功能服务网格
+          if (state.categories.isNotEmpty)
+            SliverToBoxAdapter(
+              child: _CategoryGridWidget(
+                categories: state.categories,
+                onCategoryTap: _handleCategoryTap,
+              ),
+            ),
+
+          // 限时专享区域（紧跟功能服务区下方）
+          SliverToBoxAdapter(
+            child: _RecommendationCardWidget(
+              users: state.recommendedUsers,
+              title: '限时专享',
+              promoEndTime: state.promoEndTime,
+              onUserTap: _controller.selectUser,
+            ),
+          ),
+
+          // 组队聚会横幅
+          SliverToBoxAdapter(child: _buildTeamUpBanner()),
+
+          // 附近/推荐标签
+          SliverToBoxAdapter(child: _buildNearbyTabs(state)),
+
+          // 附近用户列表
+          SliverList(
+            delegate: SliverChildBuilderDelegate(
+              (context, index) {
+                if (index < state.nearbyUsers.length) {
+                  return _UserCardWidget(
+                    user: state.nearbyUsers[index],
+                    onTap: () => _controller.selectUser(state.nearbyUsers[index]),
+                  );
+                } else if (state.isLoadingMore) {
+                  return const Center(
+                    child: Padding(
+                      padding: EdgeInsets.all(16),
+                      child: CircularProgressIndicator(
+                        valueColor: AlwaysStoppedAnimation<Color>(Color(HomeConstants.primaryPurple)),
+                      ),
+                    ),
+                  );
+                } else {
+                  return const SizedBox.shrink();
+                }
+              },
+              childCount: state.nearbyUsers.length + (state.isLoadingMore ? 1 : 0),
+            ),
+          ),
+
+          // 底部占位（为MainTabPage的底部导航留出空间）
+          const SliverToBoxAdapter(child: SizedBox(height: 100)),
+        ],
+      ),
+    );
+  }
+
+  // 复用原有的所有辅助方法
+  void _handleLocationTap() async {
+    final result = await Navigator.push<LocationRegionModel>(
+      context,
+      MaterialPageRoute(
+        builder: (context) => LocationPickerPage(
+          currentLocation: _convertToLocationRegion(_controller.value.currentLocation),
+          onLocationSelected: (location) {
+            final homeLocation = HomeLocationModel(
+              locationId: location.regionId,
+              name: location.name,
+              isHot: location.isHot,
+            );
+            _controller.changeLocation(homeLocation);
+          },
+        ),
+      ),
+    );
+
+    if (result != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('已切换到${result.name}'),
+          duration: const Duration(seconds: 2),
+        ),
+      );
+    }
+  }
+
+  void _handleCategoryTap(HomeCategoryModel category) {
+    developer.log('首页: 点击分类，名称: ${category.name}');
+    
+    _controller.selectCategory(category);
+    
+    final serviceMapping = _getServiceMapping(category.name);
+    
+    if (serviceMapping != null) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => ServiceFilterPage(
+            serviceType: serviceMapping['serviceType'],
+            serviceName: serviceMapping['serviceName'],
+          ),
+        ),
+      );
+    } else {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => SearchResultsPage(initialKeyword: category.name),
+        ),
+      );
+    }
+  }
+
+  Map<String, dynamic>? _getServiceMapping(String categoryName) {
+    switch (categoryName) {
+      case '王者荣耀':
+        return {
+          'serviceType': ServiceType.game,
+          'serviceName': '王者荣耀陪练',
+        };
+      case '英雄联盟':
+        return {
+          'serviceType': ServiceType.game,
+          'serviceName': '英雄联盟陪练',
+        };
+      case '和平精英':
+        return {
+          'serviceType': ServiceType.game,
+          'serviceName': '和平精英陪练',
+        };
+      case '荒野乱斗':
+        return {
+          'serviceType': ServiceType.game,
+          'serviceName': '荒野乱斗陪练',
+        };
+      case 'K歌':
+        return {
+          'serviceType': ServiceType.entertainment,
+          'serviceName': 'K歌服务',
+        };
+      case '台球':
+        return {
+          'serviceType': ServiceType.entertainment,
+          'serviceName': '台球服务',
+        };
+      case '私影':
+        return {
+          'serviceType': ServiceType.entertainment,
+          'serviceName': '私影服务',
+        };
+      case '按摩':
+        return {
+          'serviceType': ServiceType.lifestyle,
+          'serviceName': '按摩服务',
+        };
+      case '喝酒':
+        return {
+          'serviceType': ServiceType.entertainment,
+          'serviceName': '喝酒陪伴',
+        };
+      case '探店':
+        return {
+          'serviceType': ServiceType.lifestyle,
+          'serviceName': '探店服务',
+        };
+      default:
+        return null;
+    }
+  }
+
+  LocationRegionModel? _convertToLocationRegion(HomeLocationModel? homeLocation) {
+    if (homeLocation == null) return null;
+    
+    return LocationRegionModel(
+      regionId: homeLocation.locationId,
+      name: homeLocation.name,
+      pinyin: homeLocation.name.toLowerCase(),
+      firstLetter: homeLocation.name.isNotEmpty ? homeLocation.name[0].toUpperCase() : 'A',
+      isHot: homeLocation.isHot,
+      isCurrent: true,
+    );
+  }
+
+  Widget _buildGameBanner() {
+    return Container(
+      margin: const EdgeInsets.fromLTRB(16, 10, 16, 10),
+      height: 140,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(16),
+        gradient: const LinearGradient(
+          colors: [Color(0xFF4A90E2), Color(0xFF357ABD)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.15),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(16),
+        child: Stack(
+          children: [
+            Positioned.fill(
+              child: Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      Colors.black.withOpacity(0.3),
+                      Colors.transparent,
+                      Colors.black.withOpacity(0.2),
+                    ],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                ),
+              ),
+            ),
+            
+            Positioned(
+              left: 24,
+              top: 24,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF00E5FF),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: const Text(
+                      '制霸信条·刺客里程',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 10,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  
+                  const Text(
+                    'FIGHTING LIKE A DEVIL DRESSED AS A MAN',
+                    style: TextStyle(
+                      color: Colors.white70,
+                      fontSize: 10,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  
+                  const Text(
+                    '"迎亲首友 已月玩真畅爽"',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      shadows: [
+                        Shadow(
+                          color: Colors.black54,
+                          offset: Offset(1, 1),
+                          blurRadius: 2,
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            
+            Positioned(
+              right: 20,
+              top: 20,
+              bottom: 20,
+              child: Container(
+                width: 70,
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: Colors.white.withOpacity(0.3),
+                    width: 1,
+                  ),
+                ),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Container(
+                      width: 36,
+                      height: 36,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(18),
+                        gradient: const LinearGradient(
+                          colors: [Color(0xFFFFD700), Color(0xFFFF8C00)],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.3),
+                            blurRadius: 4,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: const Icon(
+                        Icons.person,
+                        color: Colors.white,
+                        size: 20,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    const Text(
+                      '角色',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 9,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTeamUpBanner() {
+    return Container(
+      margin: const EdgeInsets.fromLTRB(16, 10, 16, 10),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Padding(
+            padding: EdgeInsets.fromLTRB(4, 16, 4, 12),
+            child: Text(
+              '组队聚会',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Colors.black87,
+              ),
+            ),
+          ),
+          
+          Container(
+            height: 120,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(16),
+              gradient: const LinearGradient(
+                colors: [Color(0xFF6366F1), Color(0xFF8B5CF6)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.15),
+                  blurRadius: 12,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(16),
+              child: Stack(
+                children: [
+                  Positioned.fill(
+                    child: Container(
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [
+                            Colors.white.withOpacity(0.1),
+                            Colors.transparent,
+                            Colors.black.withOpacity(0.1),
+                          ],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                      ),
+                    ),
+                  ),
+                  
+                  const Positioned(
+                    left: 24,
+                    top: 24,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          '组局中心',
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                            shadows: [
+                              Shadow(
+                                color: Colors.black26,
+                                offset: Offset(1, 1),
+                                blurRadius: 2,
+                              ),
+                            ],
+                          ),
+                        ),
+                        SizedBox(height: 4),
+                        Text(
+                          '找到志同道合的伙伴',
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: Colors.white70,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  
+                  const Positioned(
+                    right: 20,
+                    top: 20,
+                    child: Text(
+                      '+12',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                  
+                  Positioned(
+                    left: 24,
+                    right: 24,
+                    bottom: 20,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        GestureDetector(
+                          onTap: _handleTeamCenterTap,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(20),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.1),
+                                  blurRadius: 4,
+                                  offset: const Offset(0, 2),
+                                ),
+                              ],
+                            ),
+                            child: const Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(Icons.groups, color: Color(0xFF6366F1), size: 16),
+                                SizedBox(width: 6),
+                                Text(
+                                  '进入组局',
+                                  style: TextStyle(
+                                    color: Color(0xFF6366F1),
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                        
+                        Row(
+                          children: List.generate(4, (index) {
+                            return Container(
+                              margin: EdgeInsets.only(left: index > 0 ? 4 : 0),
+                              width: 28,
+                              height: 28,
+                              decoration: BoxDecoration(
+                                color: _getAvatarColor(index),
+                                borderRadius: BorderRadius.circular(14),
+                                border: Border.all(color: Colors.white, width: 2),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withOpacity(0.2),
+                                    blurRadius: 3,
+                                    offset: const Offset(0, 1),
+                                  ),
+                                ],
+                              ),
+                              child: const Icon(Icons.person, color: Colors.white, size: 14),
+                            );
+                          }),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Color _getAvatarColor(int index) {
+    final colors = [Colors.red, Colors.green, Colors.blue, Colors.orange];
+    return colors[index % colors.length];
+  }
+
+  void _handleTeamCenterTap() {
+    developer.log('首页: 点击进入组局中心');
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const TeamCenterMainPage(),
+      ),
+    );
+  }
+
+  Widget _buildNearbyTabs(HomeState state) {
+    return Container(
+      margin: const EdgeInsets.fromLTRB(16, 10, 16, 10),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(HomeConstants.cardBorderRadius),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            flex: 3,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: [
+                _buildTabItem('附近', isSelected: state.selectedTab == '附近', onTap: () => _controller.switchTab('附近')),
+                _buildTabItem('推荐', isSelected: state.selectedTab == '推荐', onTap: () => _controller.switchTab('推荐')),
+                _buildTabItem('最新', isSelected: state.selectedTab == '最新', onTap: () => _controller.switchTab('最新')),
+              ],
+            ),
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            flex: 2,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                if (state.selectedRegion != null || state.activeFilters?.isNotEmpty == true)
+                  GestureDetector(
+                    onTap: _clearAllFilters,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: Colors.red[50],
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: Colors.red[300]!, width: 1),
+                      ),
+                      child: Icon(
+                        Icons.clear,
+                        size: 12,
+                        color: Colors.red[600],
+                      ),
+                    ),
+                  ),
+                if (state.selectedRegion != null || state.activeFilters?.isNotEmpty == true)
+                  const SizedBox(width: 4),
+                Flexible(
+                  child: _buildDropdownFilter(
+                    state.selectedRegion ?? '区域',
+                    Icons.location_on,
+                    onTap: _showLocationFilter,
+                    isActive: state.selectedRegion != null,
+                  ),
+                ),
+                const SizedBox(width: 4),
+                Flexible(
+                  child: _buildDropdownFilter(
+                    state.activeFilters?.isNotEmpty == true ? '筛选(${state.activeFilters!.length})' : '筛选',
+                    Icons.filter_list,
+                    onTap: _showMoreFilters,
+                    isActive: state.activeFilters?.isNotEmpty == true,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTabItem(String text, {required bool isSelected, VoidCallback? onTap}) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        decoration: BoxDecoration(
+          color: isSelected ? const Color(HomeConstants.primaryPurple) : Colors.transparent,
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Text(
+          text,
+          style: TextStyle(
+            color: isSelected ? Colors.white : Colors.black54,
+            fontSize: 14,
+            fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDropdownFilter(String text, IconData icon, {VoidCallback? onTap, bool isActive = false}) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+        decoration: BoxDecoration(
+          color: isActive ? const Color(0xFF8B5CF6).withValues(alpha: 0.1) : Colors.grey[100],
+          borderRadius: BorderRadius.circular(16),
+          border: isActive ? Border.all(color: const Color(0xFF8B5CF6), width: 1) : null,
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              icon,
+              size: 12,
+              color: isActive ? const Color(0xFF8B5CF6) : Colors.grey[600],
+            ),
+            const SizedBox(width: 2),
+            Flexible(
+              child: Text(
+                text,
+                style: TextStyle(
+                  color: isActive ? const Color(0xFF8B5CF6) : Colors.grey[600],
+                  fontSize: 10,
+                  fontWeight: isActive ? FontWeight.w600 : FontWeight.normal,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+            const SizedBox(width: 1),
+            Icon(
+              Icons.keyboard_arrow_down,
+              size: 12,
+              color: isActive ? const Color(0xFF8B5CF6) : Colors.grey[600],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showLocationFilter() async {
+    final result = await Navigator.push<String>(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const EnhancedLocationPickerPage(),
+      ),
+    );
+
+    if (result != null) {
+      _controller.updateSelectedRegion(result);
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('已选择区域：$result')),
+      );
+    }
+  }
+
+  void _showMoreFilters() async {
+    final result = await Navigator.push<FilterCriteria>(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const FilterPage(),
+      ),
+    );
+
+    if (result != null) {
+      final filterMap = _convertFilterCriteriaToMap(result);
+      _controller.applyFilters(filterMap);
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('筛选条件已应用')),
+      );
+    }
+  }
+
+  Map<String, dynamic> _convertFilterCriteriaToMap(FilterCriteria criteria) {
+    return {
+      'ageRange': {
+        'start': criteria.ageRange.start,
+        'end': criteria.ageRange.end,
+      },
+      'gender': criteria.gender,
+      'status': criteria.status,
+      'type': criteria.type,
+      'skills': criteria.skills,
+      'price': criteria.price,
+      'positions': criteria.positions,
+      'tags': criteria.tags,
+    };
+  }
+
+  void _clearAllFilters() {
+    _controller.clearFilters();
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('已清除所有筛选条件')),
     );
   }
 }

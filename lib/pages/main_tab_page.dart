@@ -7,9 +7,10 @@ import 'package:flutter/services.dart';
 import 'dart:developer' as developer;
 
 // 导入各个Tab页面
-import 'home/unified_home_page.dart';
+import 'home/unified_home_page_refactored.dart';
 import 'discovery/index.dart' as discovery;
 import 'messages/index.dart' as messages;
+import 'profile/index.dart' as profile; // 使用新架构（已整合到主index）
 
 // ============== 2. CONSTANTS ==============
 /// 🎨 主Tab页面常量
@@ -118,7 +119,7 @@ class _MainTabPageState extends State<MainTabPage> with TickerProviderStateMixin
       const messages.MessageSystemProviders(
         child: messages.MessageMainPage(),
       ), // 消息系统页面
-      const _ComingSoonPage(title: '我的', icon: Icons.person), // 个人中心（占位）
+      profile.ProfilePageFactory.createMainPageWithWrapper(), // 我的页面 - 使用新架构工厂
     ];
     
     developer.log('主Tab页面初始化完成，默认显示：${_tabController.currentTab.label}');
@@ -128,6 +129,8 @@ class _MainTabPageState extends State<MainTabPage> with TickerProviderStateMixin
   void dispose() {
     _tabController.dispose();
     _animationController.dispose();
+    // 释放Profile模块资源（使用新架构快速访问接口）
+    profile.Profile.dispose();
     super.dispose();
   }
 
@@ -182,7 +185,7 @@ class _MainTabPageState extends State<MainTabPage> with TickerProviderStateMixin
           ),
           child: SafeArea(
             child: SizedBox(
-              height: 60,
+              height: 62, // 增加2像素避免溢出
               child: Row(
                 children: _MainTabConstants.tabs.map((tab) {
                   return _buildTabItem(tab, currentIndex == tab.index);
@@ -203,7 +206,7 @@ class _MainTabPageState extends State<MainTabPage> with TickerProviderStateMixin
         behavior: HitTestBehavior.opaque,
         child: AnimatedContainer(
           duration: _MainTabConstants.tabSwitchDuration,
-          padding: const EdgeInsets.symmetric(vertical: 8),
+          padding: const EdgeInsets.symmetric(vertical: 6), // 减少到6px避免溢出
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -218,17 +221,22 @@ class _MainTabPageState extends State<MainTabPage> with TickerProviderStateMixin
                       : Colors.grey[600],
                 ),
               ),
-              const SizedBox(height: 4),
+              const SizedBox(height: 3), // 减少间距
               AnimatedDefaultTextStyle(
                 duration: _MainTabConstants.tabSwitchDuration,
                 style: TextStyle(
-                  fontSize: 12,
+                  fontSize: 11, // 减少字体大小确保不会溢出
                   fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
                   color: isSelected 
                       ? const Color(0xFF8B5CF6) 
                       : Colors.grey[600],
+                  height: 1.0, // 设置行高确保文字不会太高
                 ),
-                child: Text(tab.label),
+                child: Text(
+                  tab.label,
+                  maxLines: 1, // 限制为单行
+                  overflow: TextOverflow.ellipsis, // 防止文字溢出
+                ),
               ),
             ],
           ),
@@ -260,6 +268,14 @@ class _MainTabPageState extends State<MainTabPage> with TickerProviderStateMixin
         // 发现页：通知发现页刷新
         _notifyDiscoveryPageRefresh();
         break;
+      case 2:
+        // 消息页：刷新消息数据
+        _notifyMessagesPageRefresh();
+        break;
+      case 3:
+        // 我的页面：刷新用户数据
+        _notifyProfilePageRefresh();
+        break;
       default:
         developer.log('当前Tab点击: ${_MainTabConstants.tabs[index].label}');
     }
@@ -275,6 +291,23 @@ class _MainTabPageState extends State<MainTabPage> with TickerProviderStateMixin
   void _notifyDiscoveryPageRefresh() {
     // 这里可以通过EventBus或其他方式通知发现页刷新
     developer.log('通知发现页刷新');
+  }
+
+  /// 通知消息页刷新
+  void _notifyMessagesPageRefresh() {
+    // 这里可以通过EventBus或其他方式通知消息页刷新
+    developer.log('通知消息页刷新');
+  }
+
+  /// 通知Profile页面刷新
+  void _notifyProfilePageRefresh() {
+    try {
+      // 使用新架构的快速访问接口刷新数据
+      profile.Profile.refresh(forceRefresh: true);
+      developer.log('通知Profile页面刷新数据');
+    } catch (e) {
+      developer.log('Profile页面刷新失败: $e');
+    }
   }
 
   /// 处理发布动态
@@ -331,6 +364,8 @@ class UnifiedHomePageWrapper extends StatelessWidget {
     return const UnifiedHomePageWithoutBottomNav();
   }
 }
+
+// ProfilePageWrapper已移动到profile/index.dart中，作为ProfilePageWithInitialization
 
 /// ⏳ 敬请期待页面
 class _ComingSoonPage extends StatelessWidget {

@@ -11,6 +11,7 @@ import 'login/unified_login_page.dart';
 import 'login_demo_page.dart';
 import 'home/index.dart';
 import 'discovery/index.dart';
+import 'main_tab_page.dart';
 
 // ============== 2. CONSTANTS ==============
 class _ShowcaseConstants {
@@ -557,40 +558,49 @@ class _ShowcasePageUnifiedState extends State<ShowcasePageUnified> {
         type: DebugOptionType.toggle,
         children: [
           DebugOption(
-            id: 'home_page',
-            title: '[2.1] HOME PAGE',
-            description: 'Main homepage with recommendations',
+            id: 'main_tab_page',
+            title: '[2.1] 🆕 MAIN TAB PAGE',
+            description: '⭐ Unified tab navigation with refactored home',
             icon: Icons.dashboard,
+            type: DebugOptionType.navigation,
+            isNew: true,
+            onTap: () => _navigateToMainTabPage(),
+          ),
+          DebugOption(
+            id: 'home_page_standalone',
+            title: '[2.2] STANDALONE HOME',
+            description: 'Direct home page (with own bottom nav)',
+            icon: Icons.home_outlined,
             type: DebugOptionType.navigation,
             onTap: () => _navigateToHomePage(),
           ),
           DebugOption(
             id: 'search_bar',
-            title: '[2.2] SEARCH BAR',
+            title: '[2.3] SEARCH BAR',
             description: 'Search functionality test',
             icon: Icons.search,
             type: DebugOptionType.action,
-            onTap: () => _controller.showMessage('Search Bar test - Available in HomePage'),
+            onTap: () => _controller.showMessage('Search Bar test - Available in MainTabPage'),
           ),
           DebugOption(
             id: 'category_grid',
-            title: '[2.3] CATEGORY GRID',
+            title: '[2.4] CATEGORY GRID',
             description: 'Category selection grid',
             icon: Icons.grid_view,
             type: DebugOptionType.action,
-            onTap: () => _controller.showMessage('Category Grid test - Available in HomePage'),
+            onTap: () => _controller.showMessage('Category Grid test - Available in MainTabPage'),
           ),
           DebugOption(
             id: 'user_cards',
-            title: '[2.4] USER CARDS',
+            title: '[2.5] USER CARDS',
             description: 'User recommendation cards',
             icon: Icons.people,
             type: DebugOptionType.action,
-            onTap: () => _controller.showMessage('User Cards test - Available in HomePage'),
+            onTap: () => _controller.showMessage('User Cards test - Available in MainTabPage'),
           ),
           DebugOption(
             id: 'location_picker',
-            title: '[2.5] LOCATION PICKER',
+            title: '[2.6] LOCATION PICKER',
             description: 'City location selection page',
             icon: Icons.location_on,
             type: DebugOptionType.navigation,
@@ -832,7 +842,15 @@ class _ShowcasePageUnifiedState extends State<ShowcasePageUnified> {
     _controller.showMessage('Legacy ResetPasswordPage - Use Unified Login instead');
   }
   
+  void _navigateToMainTabPage() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const MainTabPage()),
+    );
+  }
+  
   void _navigateToHomePage() {
+    // 推荐使用MainTabPage，保留此方法以防有其他用途
     Navigator.push(
       context,
       MaterialPageRoute(builder: (context) => const UnifiedHomePage()),
@@ -840,8 +858,8 @@ class _ShowcasePageUnifiedState extends State<ShowcasePageUnified> {
   }
   
   void _navigateToLocationPicker() async {
-    // 位置选择功能已整合到UnifiedHomePage中
-    _controller.showMessage('位置选择功能已整合到首页中，请在首页中使用');
+    // 位置选择功能已整合到MainTabPage中的首页
+    _controller.showMessage('位置选择功能已整合到MainTabPage首页中，请使用MainTabPage访问');
   }
   
   void _navigateToDiscoveryMain() {

@@ -23,6 +23,7 @@ export 'pages/chat_page.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import 'models/message_models.dart';
 import 'providers/message_providers.dart';
 import 'services/message_services.dart';
 
@@ -232,6 +233,8 @@ class MessageSystemUtils {
         return Colors.blue;
       case MessageStatus.failed:
         return Colors.red;
+      default:
+        return Colors.grey;
     }
   }
 
@@ -245,6 +248,8 @@ class MessageSystemUtils {
       case UserOnlineStatus.busy:
         return Colors.red;
       case UserOnlineStatus.offline:
+        return MessageSystemConstants.offlineStatusColor;
+      default:
         return MessageSystemConstants.offlineStatusColor;
     }
   }
@@ -262,6 +267,8 @@ class MessageSystemUtils {
         return Icons.group;
       case MessageCategory.system:
         return Icons.notifications;
+      default:
+        return Icons.message;
     }
   }
 
@@ -277,6 +284,8 @@ class MessageSystemUtils {
       case MessageCategory.follow:
         return Colors.orange;
       case MessageCategory.system:
+        return MessageSystemConstants.primaryColor;
+      default:
         return MessageSystemConstants.primaryColor;
     }
   }

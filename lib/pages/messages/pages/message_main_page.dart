@@ -8,6 +8,7 @@ import 'dart:developer' as developer;
 import '../models/message_models.dart';
 import '../providers/message_providers.dart';
 import '../widgets/message_widgets.dart';
+import '../index.dart'; // 导入MessageSystemProviders
 import 'category_message_page.dart';
 import 'chat_page.dart';
 
@@ -368,7 +369,9 @@ class _MessageMainPageState extends State<MessageMainPage>
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => CategoryMessagePage(category: category),
+        builder: (context) => MessageSystemProviders(
+          child: CategoryMessagePage(category: category),
+        ),
       ),
     );
   }
@@ -380,9 +383,11 @@ class _MessageMainPageState extends State<MessageMainPage>
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => ChatPage(
-          conversationId: conversation.id,
-          otherUser: otherUser,
+        builder: (context) => MessageSystemProviders(
+          child: ChatPage(
+            conversationId: conversation.id,
+            otherUser: otherUser,
+          ),
         ),
       ),
     ).then((_) {

@@ -10,7 +10,7 @@ import 'dart:developer' as developer;
 import 'home/unified_home_page_refactored.dart';
 import 'discovery/index.dart' as discovery;
 import 'messages/index.dart' as messages;
-import 'profile/index.dart' as profile; // 使用新架构（已整合到主index）
+import 'profile/index.dart' as profile;
 
 // ============== 2. CONSTANTS ==============
 /// 🎨 主Tab页面常量

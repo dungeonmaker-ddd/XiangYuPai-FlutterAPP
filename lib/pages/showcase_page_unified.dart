@@ -12,6 +12,8 @@ import 'login_demo_page.dart';
 import 'home/index.dart';
 import 'discovery/index.dart';
 import 'main_tab_page.dart';
+import 'profile/index.dart' as profile;
+import 'profile_demo_page.dart';
 
 // ============== 2. CONSTANTS ==============
 class _ShowcaseConstants {
@@ -636,10 +638,71 @@ class _ShowcasePageUnifiedState extends State<ShowcasePageUnified> {
         ],
       ),
       
+      // 我的页面模块
+      DebugOption(
+        id: 'profile',
+        title: '[4] 👤 PROFILE MODULE',
+        description: 'Personal center & user management',
+        icon: Icons.person,
+        type: DebugOptionType.toggle,
+        children: [
+          DebugOption(
+            id: 'profile_main',
+            title: '[4.1] 🆕 PROFILE MAIN PAGE',
+            description: '⭐ Complete profile page with gradient design',
+            icon: Icons.account_circle,
+            type: DebugOptionType.navigation,
+            isNew: true,
+            onTap: () => _navigateToProfileMain(),
+          ),
+          DebugOption(
+            id: 'profile_demo',
+            title: '[4.2] 🎭 PROFILE DEMO',
+            description: '⭐ Profile demo with full functionality',
+            icon: Icons.dashboard_customize,
+            type: DebugOptionType.navigation,
+            isNew: true,
+            onTap: () => _navigateToProfileDemo(),
+          ),
+          DebugOption(
+            id: 'user_avatar',
+            title: '[4.3] USER AVATAR',
+            description: 'Avatar display & editing functionality',
+            icon: Icons.face,
+            type: DebugOptionType.action,
+            onTap: () => _controller.showMessage('User Avatar - Available in Profile Main'),
+          ),
+          DebugOption(
+            id: 'transaction_stats',
+            title: '[4.4] TRANSACTION STATS',
+            description: 'Publish/Order/Purchase/Enrollment statistics',
+            icon: Icons.bar_chart,
+            type: DebugOptionType.action,
+            onTap: () => _controller.showMessage('Transaction Stats - Available in Profile Main'),
+          ),
+          DebugOption(
+            id: 'wallet_coins',
+            title: '[4.5] WALLET & COINS',
+            description: 'Balance and coin management',
+            icon: Icons.account_balance_wallet,
+            type: DebugOptionType.action,
+            onTap: () => _controller.showMessage('Wallet & Coins - Available in Profile Main'),
+          ),
+          DebugOption(
+            id: 'feature_grid',
+            title: '[4.6] FEATURE GRID',
+            description: 'Personal center, settings, customer service, etc.',
+            icon: Icons.grid_view,
+            type: DebugOptionType.action,
+            onTap: () => _controller.showMessage('Feature Grid - Available in Profile Main'),
+          ),
+        ],
+      ),
+      
       // 其他功能选项
       DebugOption(
         id: 'architecture_comparison',
-        title: '[4] 📊 ARCHITECTURE COMPARISON',
+        title: '[5] 📊 ARCHITECTURE COMPARISON',
         description: 'Compare Single-File vs Multi-Module architectures',
         icon: Icons.architecture,
         type: DebugOptionType.action,
@@ -647,7 +710,7 @@ class _ShowcasePageUnifiedState extends State<ShowcasePageUnified> {
       ),
       DebugOption(
         id: 'ui_components',
-        title: '[5] UI COMPONENTS TEST',
+        title: '[6] UI COMPONENTS TEST',
         description: 'Test various UI components',
         icon: Icons.widgets,
         type: DebugOptionType.action,
@@ -655,7 +718,7 @@ class _ShowcasePageUnifiedState extends State<ShowcasePageUnified> {
       ),
       DebugOption(
         id: 'network_debug',
-        title: '[5] NETWORK DEBUG',
+        title: '[7] NETWORK DEBUG',
         description: 'Test network requests and responses',
         icon: Icons.network_check,
         type: DebugOptionType.action,
@@ -663,7 +726,7 @@ class _ShowcasePageUnifiedState extends State<ShowcasePageUnified> {
       ),
       DebugOption(
         id: 'database_test',
-        title: '[6] DATABASE TEST',
+        title: '[8] DATABASE TEST',
         description: 'Test local database operations',
         icon: Icons.storage,
         type: DebugOptionType.action,
@@ -671,7 +734,7 @@ class _ShowcasePageUnifiedState extends State<ShowcasePageUnified> {
       ),
       DebugOption(
         id: 'performance_monitor',
-        title: '[7] PERFORMANCE MONITOR',
+        title: '[9] PERFORMANCE MONITOR',
         description: 'Monitor app performance metrics',
         icon: Icons.speed,
         type: DebugOptionType.action,
@@ -679,7 +742,7 @@ class _ShowcasePageUnifiedState extends State<ShowcasePageUnified> {
       ),
       DebugOption(
         id: 'cache_manager',
-        title: '[8] CACHE MANAGER',
+        title: '[10] CACHE MANAGER',
         description: 'Manage application cache',
         icon: Icons.cached,
         type: DebugOptionType.action,
@@ -687,7 +750,7 @@ class _ShowcasePageUnifiedState extends State<ShowcasePageUnified> {
       ),
       DebugOption(
         id: 'log_viewer',
-        title: '[9] LOG VIEWER',
+        title: '[11] LOG VIEWER',
         description: 'View application logs',
         icon: Icons.description,
         type: DebugOptionType.action,
@@ -695,7 +758,7 @@ class _ShowcasePageUnifiedState extends State<ShowcasePageUnified> {
       ),
       DebugOption(
         id: 'device_info',
-        title: '[10] DEVICE INFO',
+        title: '[12] DEVICE INFO',
         description: 'Display device information',
         icon: Icons.phone_android,
         type: DebugOptionType.action,
@@ -703,7 +766,7 @@ class _ShowcasePageUnifiedState extends State<ShowcasePageUnified> {
       ),
       DebugOption(
         id: 'theme_switcher',
-        title: '[11] THEME SWITCHER',
+        title: '[13] THEME SWITCHER',
         description: 'Switch between themes',
         icon: Icons.palette,
         type: DebugOptionType.action,
@@ -879,6 +942,24 @@ class _ShowcasePageUnifiedState extends State<ShowcasePageUnified> {
     );
   }
   
+  void _navigateToProfileMain() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => profile.ProfilePageFactory.createMainPageWithWrapper(),
+      ),
+    );
+  }
+  
+  void _navigateToProfileDemo() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const ProfileDemoPage(),
+      ),
+    );
+  }
+  
   // 对话框方法
   void _showArchitectureComparison() {
     showDialog(
@@ -934,10 +1015,11 @@ class _ShowcasePageUnifiedState extends State<ShowcasePageUnified> {
               ),
               const SizedBox(height: 8),
               const Text(
-                '✅ 5 separate pages + components\n'
-                '• High modularity\n'
+                '✅ Multiple modules (Home, Discovery, Profile)\n'
+                '• High modularity & separation\n'
                 '• Team collaboration friendly\n'
                 '• Reusable components\n'
+                '• Provider-based state management\n'
                 '• Scalable architecture\n'
                 '• Production-ready',
                 style: TextStyle(
@@ -960,6 +1042,7 @@ class _ShowcasePageUnifiedState extends State<ShowcasePageUnified> {
               const Text(
                 '• Single-file: Prototypes, demos\n'
                 '• Multi-module: Production apps\n'
+                '• Profile Module: Complete example\n'
                 '• Both approaches are valid\n'
                 '• Choose based on project needs',
                 style: TextStyle(

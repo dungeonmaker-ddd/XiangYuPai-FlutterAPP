@@ -1,0 +1,75 @@
+﻿---
+alwaysApply: true
+---
+??? PATH ??
+????? 00000055 64C1:D356
+C:\USERS\D\DOCUMENTS\GITHUB\XIANGYUPAI-FLUTTERAPP\LIB
++---.cursor
+|   \---rules
++---build
++---pages-old
+|   +---core
+|   |   +---ai_engine
+|   |   +---auth
+|   |   |   \---models
+|   |   +---game_services
+|   |   +---payment
+|   |   \---social
+|   +---discovery
+|   |   +---models
+|   |   +---pages
+|   |   +---services
+|   |   \---utils
+|   +---home
+|   |   +---controllers
+|   |   +---search
+|   |   |   +---models
+|   |   |   +---pages
+|   |   |   +---services
+|   |   |   \---widgets
+|   |   +---submodules
+|   |   |   +---filter_system
+|   |   |   +---service_system
+|   |   |   \---team_center
+|   |   |       +---controllers
+|   |   |       +---docs
+|   |   |       +---models
+|   |   |       +---pages
+|   |   |       |   +---create
+|   |   |       |   +---detail
+|   |   |       |   +---join
+|   |   |       |   \---main
+|   |   |       +---services
+|   |   |       +---utils
+|   |   |       \---widgets
+|   |   |           +---cards
+|   |   |           +---common
+|   |   |           \---dialogs
+|   |   +---svg
+|   |   +---utils
+|   |   \---widgets
+|   |       \---common
+|   +---login
+|   |   +---config
+|   |   +---models
+|   |   +---services
+|   |   \---widgets
+|   +---messages
+|   |   +---models
+|   |   +---pages
+|   |   +---providers
+|   |   +---services
+|   |   \---widgets
+|   \---profile
+|       +---models
+|       +---pages
+|       +---providers
+|       +---services
+|       \---widgets
+\---widgets
+??? PATH ??
+????? 000000AD 64C1:D356
+C:\USERS\D\DOCUMENTS\GITHUB\XIANGYUPAI-FLUTTERAPP\ASSETS
+????? - \USERS\D\DOCUMENTS\GITHUB\XIANGYUPAI-FLUTTERAPP\ASSETS
+?????? 
+
